@@ -40,6 +40,16 @@ const OUTPUT_DIR = path.join(__dirname, 'public');
 const GOOGLE_NEWS_SEARCH = 'https://news.google.com/rss/search';
 const GOOGLE_NEWS_LOCALE = { hl: 'en-IN', gl: 'IN', ceid: 'IN:en' };
 
+// Where the site is published. Used to build absolute URLs in feeds.opml.
+// If you rename the repository, update this.
+const SITE_URL = 'https://pratapnayakin.github.io/feeds-dedup';
+
+// Items older than this many days are dropped. Google News fills low-volume
+// feeds with years-old articles. 365 removes multi-year filler while keeping
+// low-volume topics usable; override per feed with "maxAgeDays" (e.g. 30 for
+// high-volume topics).
+const MAX_AGE_DAYS = 365;
+
 // Words too common to help tell two headlines apart.
 const STOPWORDS = new Set([
   'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'and', 'or',
@@ -103,6 +113,18 @@ function isDuplicate(tokens, acceptedSets) {
   return acceptedSets.some(
     (seen) => similarityScore(tokens, seen) >= SIMILARITY_THRESHOLD
   );
+}
+
+/**
+ * Drops items older than `maxAgeDays`. Items with a missing or unparseable
+ * date are kept - we do not discard content we cannot date.
+ */
+function filterByAge(items, maxAgeDays) {
+  const cutoff = Date.now() - maxAgeDays * 24 * 60 * 60 * 1000;
+  return items.filter((item) => {
+    const date = new Date(item.pubDate || item.isoDate || '');
+    return Number.isNaN(date.getTime()) || date.getTime() >= cutoff;
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -201,6 +223,8 @@ function buildIndexHtml(results) {
     }
     h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
     .updated { color: #777; margin-top: 0; }
+    .opml { color: #777; font-size: 0.9rem; margin-top: 0.25rem; }
+    .opml a { color: inherit; }
     section { margin-top: 2.5rem; }
     h2 { font-size: 1.15rem; margin-bottom: 0.25rem; }
     h2 a { color: inherit; text-decoration: none; }
@@ -223,10 +247,36 @@ function buildIndexHtml(results) {
   <main>
     <h1>Deduped news feeds</h1>
     <p class="updated">Same story, many publishers - one headline. Updated ${escapeText(new Date().toUTCString())}.</p>
+    <p class="opml">Subscribe to every feed at once: <a href="feeds.opml">feeds.opml</a> (import into any RSS reader)</p>
     ${sections}
   </main>
 </body>
 </html>`;
+}
+
+/**
+ * Builds an OPML 2.0 subscription list from the feed config. RSS readers
+ * can import this single file instead of adding each feed URL by hand.
+ * Derived from config alone, so it is valid even if a fetch fails.
+ */
+function buildOpml(feeds) {
+  const outlines = feeds
+    .map((feed) => {
+      const xmlUrl = `${SITE_URL}/${feed.filename}.xml`;
+      return `    <outline type="rss" text="${escapeText(feed.title)}" title="${escapeText(feed.title)}" xmlUrl="${escapeText(xmlUrl)}" htmlUrl="${escapeText(SITE_URL + '/')}"/>`;
+    })
+    .join('\n');
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head>
+    <title>feeds-dedup</title>
+    <dateCreated>${new Date().toUTCString()}</dateCreated>
+  </head>
+  <body>
+${outlines}
+  </body>
+</opml>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -249,20 +299,26 @@ function loadFeeds() {
   }
 }
 
-/** Fetches one feed, dedupes it, and returns the result (no writing). */
+/** Fetches one feed, drops old items, dedupes, returns the result (no writing). */
 async function processFeed(feed, parser) {
   const parsed = await parser.parseURL(buildFeedUrl(feed));
 
+  const maxAgeDays = Number.isFinite(feed.maxAgeDays)
+    ? feed.maxAgeDays
+    : MAX_AGE_DAYS;
+  const recentItems = filterByAge(parsed.items, maxAgeDays);
+  const ageDropped = parsed.items.length - recentItems.length;
+
   const acceptedSets = [];
   const uniqueItems = [];
-  for (const item of parsed.items) {
+  for (const item of recentItems) {
     const tokens = extractTokens(item.title || '');
     if (!isDuplicate(tokens, acceptedSets)) {
       acceptedSets.push(tokens);
       uniqueItems.push(item);
     }
   }
-  return { feed, items: uniqueItems, total: parsed.items.length };
+  return { feed, items: uniqueItems, total: parsed.items.length, ageDropped };
 }
 
 async function main() {
@@ -275,6 +331,14 @@ async function main() {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
   const parser = new Parser();
   const results = [];
+
+  // The subscription list comes from config alone, so it is written even
+  // if every feed fetch below fails.
+  fs.writeFileSync(
+    path.join(OUTPUT_DIR, 'feeds.opml'),
+    buildOpml(feeds),
+    'utf8'
+  );
 
   for (const feed of feeds) {
     const startedAt = Date.now();
@@ -289,9 +353,10 @@ async function main() {
       );
 
       const seconds = ((Date.now() - startedAt) / 1000).toFixed(1);
+      const ageNote = result.ageDropped > 0 ? ` (-${result.ageDropped} old)` : '';
       console.log(
         `[ok]   ${String(feed.title).padEnd(18)} ` +
-          `${String(result.total).padStart(3)} -> ${String(result.items.length).padStart(3)} unique  (${seconds}s)`
+          `${String(result.total).padStart(3)}${ageNote} -> ${String(result.items.length).padStart(3)} unique  (${seconds}s)`
       );
     } catch (err) {
       console.error(`[fail] ${feed.title || feed.filename}: ${err.message}`);

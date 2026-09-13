@@ -1,5 +1,7 @@
 # feeds-dedup
 
+![Update News Feed](https://github.com/pratapnayakin/feeds-dedup/actions/workflows/update.yml/badge.svg)
+
 A self-updating, deduplicated RSS feed service. It fetches news from Google
 News search feeds, removes near-duplicate headlines (the same story reported
 by many publishers), and publishes one clean RSS 2.0 feed per topic plus a
@@ -14,6 +16,7 @@ No servers, no API keys, no cost.
 | What | URL |
 |---|---|
 | Index page (open in a browser) | https://pratapnayakin.github.io/feeds-dedup/ |
+| One-click subscribe (OPML - import into any reader) | https://pratapnayakin.github.io/feeds-dedup/feeds.opml |
 | Rourkela News | https://pratapnayakin.github.io/feeds-dedup/rourkela.xml |
 | OSHB News | https://pratapnayakin.github.io/feeds-dedup/oshb.xml |
 | Bengaluru Power Cuts | https://pratapnayakin.github.io/feeds-dedup/bengaluru-power.xml |
@@ -38,6 +41,7 @@ GitHub Actions (hourly cron, or on every push, or manual)
         |-- 3. dedupes the headlines (word-overlap scoring, per feed)
         |-- 4. writes public/<filename>.xml  (clean RSS 2.0)
         |-- 5. writes public/index.html      (readable index of all feeds)
+        |-- 6. writes public/feeds.opml      (one-click subscribe list)
         |
         v
 upload-pages-artifact --> deploy-pages
@@ -138,6 +142,9 @@ An explicit `url` always wins over `keywords`.
 - `title` and `description` appear in the XML header and on the index page
 - A feed with neither `url` nor `keywords` fails with a clear error message
 - Order in the file = order on the index page
+- Optional: `"maxAgeDays": 30` drops items older than that many days
+  (default 365; change `MAX_AGE_DAYS` in `dedup.js` for a global default).
+  Items with a missing date are kept.
 
 To add a feed: edit `feeds.json`, commit, push. The workflow deploys it
 automatically. To remove one: delete the entry. The full every-time checklist
@@ -157,7 +164,8 @@ manual - the site updates, your reader does not.
 3. Commit and push to `main`
 4. Wait for the green workflow run (~30s) - the new `<filename>.xml` is live
 5. **Manually** add `https://pratapnayakin.github.io/feeds-dedup/<filename>.xml`
-   to your RSS reader - nothing subscribes for you
+   to your RSS reader - or re-import `feeds.opml`, which now includes it
+   (re-import behavior varies by reader, so check for duplicates)
 
 ### When you REMOVE a feed
 
@@ -165,14 +173,16 @@ manual - the site updates, your reader does not.
 2. Commit and push to `main`
 3. The next workflow run rebuilds `public/` from scratch - the old
    `<filename>.xml` will 404
-4. **Manually** delete that URL from your RSS reader, or it shows fetch
-   errors on every refresh
+4. **Manually** delete that URL from your RSS reader (or re-import the
+   updated `feeds.opml`), or it shows fetch errors on every refresh
 
 ---
 
 ## How deduplication works
 
-For each feed, every headline goes through:
+For each feed, items older than the age cutoff (365 days by default,
+per-feed via `maxAgeDays`) are dropped first. Then every headline goes
+through:
 
 1. **Strip the publisher tag.** Google News appends ` - Publisher Name` to
    titles. It is removed *for comparison only* (kept in the output).
@@ -245,9 +255,12 @@ Read this section honestly - these are the edges of the system.
 - **Links are Google redirects** (`news.google.com/rss/articles/...`), not
   direct publisher URLs. They resolve correctly, but they are long and opaque,
   and Google can change their format at any time.
-- **Old articles appear.** For low-volume queries Google fills the feed with
-  older results (the OSHB feed has returned articles from 2015). This is
-  Google's behavior, not a bug. Do not assume feed order equals recency.
+- **Old articles appear - and are now filtered.** For low-volume queries
+  Google fills the feed with older results (the OSHB feed once returned
+  articles from 2015). Items older than 365 days are dropped automatically;
+  override per feed with `maxAgeDays` in `feeds.json` (e.g. 30 for
+  high-volume topics). Items with a missing date are kept, and feed order
+  still does not equal recency.
 - **Some titles contain literal newlines** from the source. Harmless when
   rendered, slightly ugly in the HTML source.
 - **Quoted keywords are exact match.** `"OSHB"` will not match `OSHB's`.
@@ -304,6 +317,8 @@ Read this section honestly - these are the edges of the system.
 | Ignore more common words | Add to the `STOPWORDS` set in `dedup.js` |
 | Change refresh frequency | Edit the `cron` line in `.github/workflows/update.yml` |
 | Change locale for keyword feeds | Edit `GOOGLE_NEWS_LOCALE` in `dedup.js` |
+| Change the age cutoff | Set `maxAgeDays` per feed in `feeds.json`, or `MAX_AGE_DAYS` in `dedup.js` |
+| Repo renamed? | Update `SITE_URL` in `dedup.js` (used by `feeds.opml`) |
 
 ---
 
@@ -314,7 +329,7 @@ Read this section honestly - these are the edges of the system.
 | Workflow red at "Install dependencies" | `package-lock.json` missing or out of sync | Run `npm install` locally, commit the lock file |
 | Workflow red at "Setup Pages" | Pages source not set to "GitHub Actions" | Settings -> Pages -> Source: "GitHub Actions", then re-run the job |
 | A feed vanished from the site | Its fetch failed that run | Check the Actions log for a `[fail]` line; it returns on the next good run |
-| Feed full of old articles | Google fills low-volume queries with older results | Expected behavior; narrow or broaden the query to taste |
+| Feed full of old articles | Age cutoff too lenient for that topic | Set `"maxAgeDays": 30` (or lower) on that feed in `feeds.json` |
 | Too many duplicate stories | Threshold too high for that topic | Lower `SIMILARITY_THRESHOLD` slightly |
 | Genuinely different stories merged | Threshold too low | Raise `SIMILARITY_THRESHOLD` slightly |
 | `npm start` says "Cannot read feeds.json" | Running from the wrong directory | Run from the repo root |
@@ -328,5 +343,6 @@ Read this section honestly - these are the edges of the system.
 - Site: https://pratapnayakin.github.io/feeds-dedup/
 - Engine: `dedup.js` (Node, single dependency: `rss-parser`)
 - Config: `feeds.json` (keywords for simple feeds, `url` for complex ones)
+- Subscribe once: import `feeds.opml` into any RSS reader
 - Refresh: hourly + on every push to `main`
 - Cost: zero
