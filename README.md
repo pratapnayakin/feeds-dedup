@@ -140,7 +140,33 @@ An explicit `url` always wins over `keywords`.
 - Order in the file = order on the index page
 
 To add a feed: edit `feeds.json`, commit, push. The workflow deploys it
-automatically. To remove one: delete the entry. That is the whole process.
+automatically. To remove one: delete the entry. The full every-time checklist
+(including the RSS reader side) is below.
+
+---
+
+## Adding or removing a feed - the every-time checklist
+
+The git side is automatic after you push; the RSS reader side is always
+manual - the site updates, your reader does not.
+
+### When you ADD a feed
+
+1. Edit `feeds.json` - add the entry (keywords or url)
+2. Optional but wise: run `npm start` and check `public/index.html`
+3. Commit and push to `main`
+4. Wait for the green workflow run (~30s) - the new `<filename>.xml` is live
+5. **Manually** add `https://pratapnayakin.github.io/feeds-dedup/<filename>.xml`
+   to your RSS reader - nothing subscribes for you
+
+### When you REMOVE a feed
+
+1. Delete the entry from `feeds.json`
+2. Commit and push to `main`
+3. The next workflow run rebuilds `public/` from scratch - the old
+   `<filename>.xml` will 404
+4. **Manually** delete that URL from your RSS reader, or it shows fetch
+   errors on every refresh
 
 ---
 
