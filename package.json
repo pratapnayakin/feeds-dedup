@@ -1,0 +1,16 @@
+{
+  "name": "feeds-dedup",
+  "version": "1.0.0",
+  "description": "Fetches RSS feeds, removes near-duplicate headlines, and publishes clean feeds plus a readable index page.",
+  "main": "dedup.js",
+  "scripts": {
+    "start": "node dedup.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "rss-parser": "^3.13.0"
+  },
+  "license": "MIT"
+}

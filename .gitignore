@@ -1,0 +1,6 @@
+# Dependencies - restored by npm ci in the workflow
+node_modules/
+
+# Generated output - rebuilt by the workflow on every run and deployed
+# to GitHub Pages as an artifact, so it never needs to be versioned
+public/
