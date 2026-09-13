@@ -9,6 +9,9 @@ readable index page - all hosted free on GitHub Pages, refreshed every hour.
 
 No servers, no API keys, no cost.
 
+> New here? Read **[EXPLAINED.md](EXPLAINED.md)** - the same project
+> explained in plain English, no jargon.
+
 ---
 
 ## Live output
