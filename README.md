@@ -24,6 +24,7 @@ No servers, no API keys, no cost.
 | OSHB News | https://pratapnayakin.github.io/feeds-dedup/oshb.xml |
 | Bengaluru Power Cuts | https://pratapnayakin.github.io/feeds-dedup/bengaluru-power.xml |
 | LLM and AI News | https://pratapnayakin.github.io/feeds-dedup/llm.xml |
+| Lohegaon Tiffin Service | https://pratapnayakin.github.io/feeds-dedup/lohegaon-tiffin.xml |
 
 Paste any `.xml` URL into an RSS reader (Feedly, Inoreader, NetNewsWire, ...).
 The reader polls it on its normal refresh cycle; the content behind it is
@@ -333,6 +334,7 @@ Read this section honestly - these are the edges of the system.
 | Workflow red at "Setup Pages" | Pages source not set to "GitHub Actions" | Settings -> Pages -> Source: "GitHub Actions", then re-run the job |
 | A feed vanished from the site | Its fetch failed that run | Check the Actions log for a `[fail]` line; it returns on the next good run |
 | Feed full of old articles | Age cutoff too lenient for that topic | Set `"maxAgeDays": 30` (or lower) on that feed in `feeds.json` |
+| New Alerts-based feed is empty | Alerts only collect content published after creation - no backfill | Normal; items appear as Google indexes new matching pages (can take days for narrow queries). For older posts, use regular Google search or add a Google News companion feed |
 | Too many duplicate stories | Threshold too high for that topic | Lower `SIMILARITY_THRESHOLD` slightly |
 | Genuinely different stories merged | Threshold too low | Raise `SIMILARITY_THRESHOLD` slightly |
 | `npm start` says "Cannot read feeds.json" | Running from the wrong directory | Run from the repo root |

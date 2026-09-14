@@ -126,7 +126,7 @@ Open https://pratapnayakin.github.io/feeds-dedup/ and you see:
 - When it was last updated
 - A link to `feeds.opml` (the one-click subscribe file)
 - One section per feed (Rourkela News, OSHB News, Bengaluru Power Cuts,
-  LLM and AI News)
+  LLM and AI News, Lohegaon Tiffin Service)
 - Each section shows the story count ("59 of 100 stories") and a list of
   headlines with dates
 - Each headline links to the actual article on Google News
