@@ -4,6 +4,7 @@
       "filename": "rourkela",
       "title": "Rourkela News",
       "description": "Clean local updates for Rourkela",
+      "maxAgeDays": 30,
       "keywords": ["Rourkela", "Raurkela"]
     },
     {
@@ -16,18 +17,21 @@
       "filename": "bengaluru-power",
       "title": "Bengaluru Power Cuts",
       "description": "Power cuts and outages in Bengaluru",
+      "maxAgeDays": 30,
       "url": "https://news.google.com/rss/search?q=%28%22Bengaluru%22%20OR%20%22Bangalore%22%29%20%28%22power%20cut%22%20OR%20%22power%20outage%22%20OR%20%22power%20shutdown%22%20OR%20%22power%20supply%20interruption%22%20OR%20%22electricity%20outage%22%29&hl=en-IN&gl=IN&ceid=IN:en"
     },
     {
       "filename": "llm",
       "title": "LLM and AI News",
       "description": "Model releases, benchmarks, safety and pricing",
+      "maxAgeDays": 90,
       "url": "https://news.google.com/rss/search?q=%28%22Large%20Language%20Model%22%20OR%20LLM%20OR%20%22Generative%20AI%22%20OR%20%22Foundation%20Model%22%29%20%28%22new%20model%22%20OR%20release%20OR%20launch%20OR%20benchmark%20OR%20leaderboard%20OR%20MMLU%20OR%20jailbreak%20OR%20%22red%20team%22%20OR%20%22AI%20safety%22%20OR%20%22prompt%20injection%22%20OR%20%22open%20weights%22%20OR%20multimodal%20OR%20agentic%20OR%20pricing%20OR%20%22API%20cost%22%20OR%20%22inference%20cost%22%20OR%20security%20OR%20vulnerability%20OR%20%22data%20privacy%22%29%20-law%20-degree%20-%22Master%20of%20Laws%22%20-cryptocurrency%20-university%20-admission&hl=en-US&gl=US&ceid=US:en"
     },
     {
       "filename": "lohegaon-tiffin",
       "title": "Lohegaon Tiffin Service",
       "description": "Tiffin and dabba services in Lohegaon and Wagholi, Pune",
+      "maxAgeDays": 30,
       "url": "https://www.google.co.in/alerts/feeds/12170057616647651639/1222724572601376391"
     }
   ]

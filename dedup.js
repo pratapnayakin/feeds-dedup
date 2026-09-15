@@ -127,6 +127,12 @@ function filterByAge(items, maxAgeDays) {
   });
 }
 
+/** Milliseconds since epoch for sorting, or 0 when the item has no usable date. */
+function dateValue(item) {
+  const date = new Date(item.pubDate || item.isoDate || '');
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
 // ---------------------------------------------------------------------------
 // Output helpers
 // ---------------------------------------------------------------------------
@@ -308,6 +314,10 @@ async function processFeed(feed, parser) {
     : MAX_AGE_DAYS;
   const recentItems = filterByAge(parsed.items, maxAgeDays);
   const ageDropped = parsed.items.length - recentItems.length;
+
+  // Newest first, so the freshest version of each story wins dedup and the
+  // output order stays stable across runs (less re-notify churn in readers).
+  recentItems.sort((a, b) => dateValue(b) - dateValue(a));
 
   const acceptedSets = [];
   const uniqueItems = [];

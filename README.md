@@ -185,7 +185,9 @@ manual - the site updates, your reader does not.
 ## How deduplication works
 
 For each feed, items older than the age cutoff (365 days by default,
-per-feed via `maxAgeDays`) are dropped first. Then every headline goes
+per-feed via `maxAgeDays`) are dropped first. Survivors are sorted
+newest-first so the freshest version of each story wins dedup and the
+output order stays stable across runs. Then every headline goes
 through:
 
 1. **Strip the publisher tag.** Google News appends ` - Publisher Name` to
@@ -335,6 +337,7 @@ Read this section honestly - these are the edges of the system.
 | A feed vanished from the site | Its fetch failed that run | Check the Actions log for a `[fail]` line; it returns on the next good run |
 | Feed full of old articles | Age cutoff too lenient for that topic | Set `"maxAgeDays": 30` (or lower) on that feed in `feeds.json` |
 | New Alerts-based feed is empty | Alerts only collect content published after creation - no backfill | Normal; items appear as Google indexes new matching pages (can take days for narrow queries). For older posts, use regular Google search or add a Google News companion feed |
+| Reader notifies for old stories | Every new subscription notifies for all items once; afterwards only unseen IDs notify | Expected on first subscribe; ongoing churn is reduced by newest-first ordering - also check the reader app notification settings |
 | Too many duplicate stories | Threshold too high for that topic | Lower `SIMILARITY_THRESHOLD` slightly |
 | Genuinely different stories merged | Threshold too low | Raise `SIMILARITY_THRESHOLD` slightly |
 | `npm start` says "Cannot read feeds.json" | Running from the wrong directory | Run from the repo root |
