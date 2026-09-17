@@ -14,7 +14,8 @@
  *     "filename": "my-feed",     -> becomes public/my-feed.xml
  *     "title": "My Feed",
  *     "description": "What it covers",
- *     "keywords": ["single word", "some phrase"]
+ *     "keywords": ["single word", "some phrase"],
+ *     "exclude": ["noise", "junk"]  -> optional, appends -noise -junk
  *   }
  *
  * Keywords are matched exactly as typed (phrases stay phrases).
@@ -67,13 +68,17 @@ const SIMILARITY_THRESHOLD = 0.55;
 /**
  * Resolves the URL for one feed. An explicit "url" always wins;
  * otherwise the keywords become: "a" OR "b" OR "c" on Google News.
+ * An optional "exclude" list appends -term filters (keyword feeds only).
  */
 function buildFeedUrl(feed) {
   if (feed.url) return feed.url;
   if (!Array.isArray(feed.keywords) || feed.keywords.length === 0) {
     throw new Error('feed needs either "keywords" or "url"');
   }
-  const query = feed.keywords.map((keyword) => `"${keyword}"`).join(' OR ');
+  let query = feed.keywords.map((keyword) => `"${keyword}"`).join(' OR ');
+  if (Array.isArray(feed.exclude) && feed.exclude.length > 0) {
+    query += ' ' + feed.exclude.map((term) => `-${term}`).join(' ');
+  }
   const params = new URLSearchParams({ q: query, ...GOOGLE_NEWS_LOCALE });
   return `${GOOGLE_NEWS_SEARCH}?${params}`;
 }

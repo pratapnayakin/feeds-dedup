@@ -107,7 +107,8 @@ deployed.
 
 ## Configuring feeds (`feeds.json`)
 
-Every feed is an object with four fields. Two ways to define the source:
+Every feed is an object with four fields, plus one optional `exclude` list.
+Two ways to define the source:
 
 ### Way 1 - keywords (recommended, scalable)
 
@@ -137,7 +138,7 @@ settings (`en-IN`, India). You never touch URL encoding.
 
 Use this when the query needs things a flat keyword list cannot express:
 AND-groups like `(Bengaluru OR Bangalore) (power cut OR outage)`,
-exclusions like `-law -university`, or a non-Google RSS source entirely.
+or a non-Google RSS source entirely.
 An explicit `url` always wins over `keywords`.
 
 ### Rules
@@ -146,6 +147,8 @@ An explicit `url` always wins over `keywords`.
 - `title` and `description` appear in the XML header and on the index page
 - A feed with neither `url` nor `keywords` fails with a clear error message
 - Order in the file = order on the index page
+- Optional: `"exclude": ["football", "cricket"]` appends `-football -cricket`
+  to the search query (keyword feeds only; `url` feeds embed their own exclusions)
 - Optional: `"maxAgeDays": 30` drops items older than that many days
   (default 365; change `MAX_AGE_DAYS` in `dedup.js` for a global default).
   Items with a missing date are kept.
@@ -321,6 +324,7 @@ Read this section honestly - these are the edges of the system.
 | Make dedup more aggressive | Lower `SIMILARITY_THRESHOLD` in `dedup.js` (e.g. 0.45) |
 | Make dedup safer | Raise `SIMILARITY_THRESHOLD` (e.g. 0.65) |
 | Ignore more common words | Add to the `STOPWORDS` set in `dedup.js` |
+| Exclude noisy terms from a feed | Add an `"exclude"` list to that feed in `feeds.json` |
 | Change refresh frequency | Edit the `cron` line in `.github/workflows/update.yml` |
 | Change locale for keyword feeds | Edit `GOOGLE_NEWS_LOCALE` in `dedup.js` |
 | Change the age cutoff | Set `maxAgeDays` per feed in `feeds.json`, or `MAX_AGE_DAYS` in `dedup.js` |
