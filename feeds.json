@@ -8,6 +8,55 @@
       "keywords": ["Rourkela", "Raurkela"]
     },
     {
+      "filename": "rourkela-crime",
+      "title": "Rourkela Crime",
+      "description": "Crime and police news from Rourkela and Sundargarh",
+      "maxAgeDays": 30,
+      "url": "https://news.google.com/rss/search?q=%28%22Rourkela%22%20OR%20%22Raurkela%22%20OR%20%22Sundargarh%22%29%20%28crime%20OR%20arrest%20OR%20murder%20OR%20theft%20OR%20robbery%20OR%20smuggling%29&hl=en-IN&gl=IN&ceid=IN:en"
+    },
+    {
+      "filename": "rourkela-accident",
+      "title": "Rourkela Accidents",
+      "description": "Accident and road news from Rourkela and Sundargarh",
+      "maxAgeDays": 30,
+      "url": "https://news.google.com/rss/search?q=%28%22Rourkela%22%20OR%20%22Raurkela%22%20OR%20%22Sundargarh%22%29%20%28accident%20OR%20crash%20OR%20mishap%20OR%20%22killed%22%20OR%20dead%29&hl=en-IN&gl=IN&ceid=IN:en"
+    },
+    {
+      "filename": "rourkela-weather",
+      "title": "Rourkela Weather",
+      "description": "Cyclone, rainfall and IMD alerts for Rourkela and Sundargarh",
+      "maxAgeDays": 30,
+      "url": "https://news.google.com/rss/search?q=%28%22Rourkela%22%20OR%20%22Raurkela%22%20OR%20%22Sundargarh%22%29%20%28cyclone%20OR%20%22low%20pressure%22%20OR%20%22heavy%20rainfall%22%20OR%20IMD%20OR%20flood%29&hl=en-IN&gl=IN&ceid=IN:en"
+    },
+    {
+      "filename": "rourkela-exams",
+      "title": "Rourkela Exams and Results",
+      "description": "Exam notifications, results and recruitment in Rourkela (incl. NIT)",
+      "maxAgeDays": 30,
+      "url": "https://news.google.com/rss/search?q=%28%22Rourkela%22%20OR%20%22Raurkela%22%20OR%20%22NIT%20Rourkela%22%29%20%28exam%20OR%20result%20OR%20recruitment%20OR%20%22admit%20card%22%29%20-cricket%20-football%20-movie&hl=en-IN&gl=IN&ceid=IN:en"
+    },
+    {
+      "filename": "rourkela-govt",
+      "title": "Rourkela Government",
+      "description": "Cabinet decisions, schemes and policy news for Rourkela and Sundargarh",
+      "maxAgeDays": 30,
+      "url": "https://news.google.com/rss/search?q=%28%22Rourkela%22%20OR%20%22Raurkela%22%20OR%20%22Sundargarh%22%29%20%28cabinet%20OR%20scheme%20OR%20policy%20OR%20ordinance%20OR%20%22new%20rule%22%29&hl=en-IN&gl=IN&ceid=IN:en"
+    },
+    {
+      "filename": "rourkela-power",
+      "title": "Rourkela Power Cuts",
+      "description": "Power cuts and outages in Rourkela and Sundargarh",
+      "maxAgeDays": 30,
+      "url": "https://news.google.com/rss/search?q=%28%22Rourkela%22%20OR%20%22Raurkela%22%20OR%20%22Sundargarh%22%29%20%28%22power%20cut%22%20OR%20%22power%20outage%22%20OR%20%22power%20shutdown%22%20OR%20%22electricity%20outage%22%29&hl=en-IN&gl=IN&ceid=IN:en"
+    },
+    {
+      "filename": "rourkela-health",
+      "title": "Rourkela Health",
+      "description": "Hospitals, outbreaks and health department news from Rourkela",
+      "maxAgeDays": 30,
+      "url": "https://news.google.com/rss/search?q=%28%22Rourkela%22%20OR%20%22Raurkela%22%20OR%20%22Sundargarh%22%29%20%28hospital%20OR%20dengue%20OR%20%22health%20department%22%20OR%20outbreak%29&hl=en-IN&gl=IN&ceid=IN:en"
+    },
+    {
       "filename": "odisha",
       "title": "Odisha Headlines",
       "description": "Top stories from Bhubaneswar, Cuttack and the Berhampur region, deduplicated",
@@ -20,6 +69,55 @@
       "description": "Accidents, crime and police news from Bhubaneswar",
       "maxAgeDays": 30,
       "url": "https://news.google.com/rss/search?q=%28%22Bhubaneswar%22%20OR%20%22Bhubaneshwar%22%29%20%28accident%20OR%20crash%20OR%20crime%20OR%20arrest%20OR%20murder%20OR%20robbery%20OR%20theft%29&hl=en-IN&gl=IN&ceid=IN:en"
+    },
+    {
+      "filename": "odisha-crime",
+      "title": "Odisha Crime",
+      "description": "Crime and police news from across Odisha",
+      "maxAgeDays": 7,
+      "url": "https://news.google.com/rss/search?q=%28%22Odisha%22%20OR%20%22Bhubaneswar%22%20OR%20%22Cuttack%22%20OR%20%22Berhampur%22%29%20%28crime%20OR%20arrest%20OR%20murder%20OR%20theft%20OR%20robbery%20OR%20smuggling%29&hl=en-IN&gl=IN&ceid=IN:en"
+    },
+    {
+      "filename": "odisha-accident",
+      "title": "Odisha Accidents",
+      "description": "Accident and road news from across Odisha",
+      "maxAgeDays": 7,
+      "url": "https://news.google.com/rss/search?q=%28%22Odisha%22%20OR%20%22Bhubaneswar%22%20OR%20%22Cuttack%22%20OR%20%22Berhampur%22%29%20%28accident%20OR%20crash%20OR%20mishap%20OR%20%22killed%22%20OR%20dead%29&hl=en-IN&gl=IN&ceid=IN:en"
+    },
+    {
+      "filename": "odisha-weather",
+      "title": "Odisha Weather",
+      "description": "Cyclone, rainfall and IMD alerts for Odisha",
+      "maxAgeDays": 7,
+      "url": "https://news.google.com/rss/search?q=%28%22Odisha%22%20OR%20%22Bhubaneswar%22%20OR%20%22Cuttack%22%29%20%28cyclone%20OR%20%22low%20pressure%22%20OR%20%22heavy%20rainfall%22%20OR%20IMD%20OR%20flood%29&hl=en-IN&gl=IN&ceid=IN:en"
+    },
+    {
+      "filename": "odisha-exams",
+      "title": "Odisha Exams and Results",
+      "description": "Exam notifications, results and recruitment in Odisha",
+      "maxAgeDays": 14,
+      "url": "https://news.google.com/rss/search?q=%28%22Odisha%22%20OR%20OSSC%20OR%20OSSSC%20OR%20CHSE%20OR%20%22BSE%20Odisha%22%29%20%28exam%20OR%20result%20OR%20recruitment%20OR%20%22admit%20card%22%29%20-cricket%20-football%20-movie&hl=en-IN&gl=IN&ceid=IN:en"
+    },
+    {
+      "filename": "odisha-govt",
+      "title": "Odisha Government",
+      "description": "Cabinet decisions, schemes and policy news from Odisha",
+      "maxAgeDays": 14,
+      "url": "https://news.google.com/rss/search?q=%28%22Odisha%22%29%20%28cabinet%20OR%20scheme%20OR%20policy%20OR%20ordinance%20OR%20%22new%20rule%22%20OR%20%22government%20decision%22%29&hl=en-IN&gl=IN&ceid=IN:en"
+    },
+    {
+      "filename": "odisha-power",
+      "title": "Odisha Power Cuts",
+      "description": "Power cuts and outages in Odisha",
+      "maxAgeDays": 30,
+      "url": "https://news.google.com/rss/search?q=%28%22Odisha%22%20OR%20%22Bhubaneswar%22%20OR%20%22Cuttack%22%29%20%28%22power%20cut%22%20OR%20%22power%20outage%22%20OR%20%22power%20shutdown%22%20OR%20%22electricity%20outage%22%29&hl=en-IN&gl=IN&ceid=IN:en"
+    },
+    {
+      "filename": "odisha-health",
+      "title": "Odisha Health",
+      "description": "Hospitals, outbreaks and health department news from Odisha",
+      "maxAgeDays": 30,
+      "url": "https://news.google.com/rss/search?q=%28%22Odisha%22%20OR%20%22Bhubaneswar%22%20OR%20%22Cuttack%22%29%20%28hospital%20OR%20dengue%20OR%20%22health%20department%22%20OR%20outbreak%29&hl=en-IN&gl=IN&ceid=IN:en"
     },
     {
       "filename": "oshb",
@@ -62,13 +160,22 @@
       "description": "Top world stories, deduplicated",
       "maxAgeDays": 3,
       "url": "https://news.google.com/rss/headlines/section/topic/WORLD?hl=en-IN&gl=IN&ceid=IN:en"
+    }
+  ],
+  "bundles": [
+    {
+      "filename": "odisha-breaking",
+      "title": "Odisha Breaking - All Alerts",
+      "description": "Every important Odisha story, merged from the category feeds",
+      "maxItems": 100,
+      "sources": ["odisha", "odisha-crime", "odisha-accident", "odisha-weather", "odisha-exams", "odisha-govt", "odisha-power", "odisha-health"]
     },
     {
-      "filename": "lohegaon-tiffin",
-      "title": "Lohegaon Tiffin Service",
-      "description": "Tiffin and dabba services in Lohegaon and Wagholi, Pune",
-      "maxAgeDays": 30,
-      "url": "https://www.google.co.in/alerts/feeds/12170057616647651639/1222724572601376391"
+      "filename": "rourkela-breaking",
+      "title": "Rourkela Breaking - All Alerts",
+      "description": "Every important Rourkela story, merged from the category feeds",
+      "maxItems": 100,
+      "sources": ["rourkela", "rourkela-crime", "rourkela-accident", "rourkela-weather", "rourkela-exams", "rourkela-govt", "rourkela-power", "rourkela-health"]
     }
   ]
 }

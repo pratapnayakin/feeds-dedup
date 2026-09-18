@@ -181,7 +181,7 @@ function buildRssXml(feed, items) {
 <rss version="2.0">
   <channel>
     <title>${escapeText(feed.title)}</title>
-    <link>https://news.google.com</link>
+    <link>${escapeText(feed.link || 'https://news.google.com')}</link>
     <description>${escapeText(feed.description)}</description>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     ${itemsXml}
@@ -270,8 +270,8 @@ function buildIndexHtml(results) {
  * can import this single file instead of adding each feed URL by hand.
  * Derived from config alone, so it is valid even if a fetch fails.
  */
-function buildOpml(feeds) {
-  const outlines = feeds
+function buildOpml(feeds, bundles) {
+  const outlines = feeds.concat(bundles)
     .map((feed) => {
       const xmlUrl = `${SITE_URL}/${feed.filename}.xml`;
       return `    <outline type="rss" text="${escapeText(feed.title)}" title="${escapeText(feed.title)}" xmlUrl="${escapeText(xmlUrl)}" htmlUrl="${escapeText(SITE_URL + '/')}"/>`;
@@ -291,11 +291,39 @@ ${outlines}
 }
 
 // ---------------------------------------------------------------------------
+// Bundles
+// ---------------------------------------------------------------------------
+
+/**
+ * Merges the deduped items of a bundle's source feeds into one list.
+ * Cross-dedupes across sources (the same story in two feeds collapses),
+ * sorts newest-first, and caps the length.
+ */
+function buildBundleItems(bundle, resultsByFilename) {
+  const seen = [];
+  const merged = [];
+  for (const filename of bundle.sources || []) {
+    const result = resultsByFilename[filename];
+    if (!result) continue; // source failed this run - the bundle skips it
+    for (const item of result.items) {
+      const tokens = extractTokens(item.title || '');
+      if (!isDuplicate(tokens, seen)) {
+        seen.push(tokens);
+        merged.push(item);
+      }
+    }
+  }
+  merged.sort((a, b) => dateValue(b) - dateValue(a));
+  const maxItems = Number.isFinite(bundle.maxItems) ? bundle.maxItems : 100;
+  return merged.slice(0, maxItems);
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
 /** Loads and validates feeds.json. */
-function loadFeeds() {
+function loadConfig() {
   let raw;
   try {
     raw = fs.readFileSync(CONFIG_FILE, 'utf8');
@@ -303,8 +331,7 @@ function loadFeeds() {
     throw new Error(`Cannot read feeds.json: ${err.message}`);
   }
   try {
-    const config = JSON.parse(raw);
-    return Array.isArray(config.feeds) ? config.feeds : [];
+    return JSON.parse(raw);
   } catch (err) {
     throw new Error(`feeds.json is not valid JSON: ${err.message}`);
   }
@@ -337,7 +364,9 @@ async function processFeed(feed, parser) {
 }
 
 async function main() {
-  const feeds = loadFeeds();
+  const config = loadConfig();
+  const feeds = Array.isArray(config.feeds) ? config.feeds : [];
+  const bundles = Array.isArray(config.bundles) ? config.bundles : [];
   if (feeds.length === 0) {
     console.log('No feeds found in feeds.json - nothing to do.');
     return;
@@ -351,7 +380,7 @@ async function main() {
   // if every feed fetch below fails.
   fs.writeFileSync(
     path.join(OUTPUT_DIR, 'feeds.opml'),
-    buildOpml(feeds),
+    buildOpml(feeds, bundles),
     'utf8'
   );
 
@@ -378,10 +407,35 @@ async function main() {
     }
   }
 
-  if (results.length > 0) {
+  // Bundles merge the deduped output of their source feeds into one XML.
+  const resultsByFilename = {};
+  for (const result of results) {
+    resultsByFilename[result.feed.filename] = result;
+  }
+
+  const bundleResults = [];
+  for (const bundle of bundles) {
+    const items = buildBundleItems(bundle, resultsByFilename);
+    fs.writeFileSync(
+      path.join(OUTPUT_DIR, `${bundle.filename}.xml`),
+      buildRssXml({ ...bundle, link: SITE_URL + '/' }, items),
+      'utf8'
+    );
+    const totalIn = (bundle.sources || []).reduce(
+      (sum, f) => sum + (resultsByFilename[f] ? resultsByFilename[f].items.length : 0),
+      0
+    );
+    bundleResults.push({ feed: bundle, items, total: totalIn, ageDropped: 0 });
+    console.log(
+      `[ok]   ${String(bundle.title).padEnd(18)} ` +
+        `${String(totalIn).padStart(3)} -> ${String(items.length).padStart(3)} merged`
+    );
+  }
+
+  if (results.length + bundleResults.length > 0) {
     fs.writeFileSync(
       path.join(OUTPUT_DIR, 'index.html'),
-      buildIndexHtml(results),
+      buildIndexHtml(results.concat(bundleResults)),
       'utf8'
     );
   }
@@ -389,9 +443,27 @@ async function main() {
   const totalIn = results.reduce((sum, r) => sum + r.total, 0);
   const totalOut = results.reduce((sum, r) => sum + r.items.length, 0);
   console.log(`\nDone: ${totalIn} items -> ${totalOut} unique. Output in public/`);
+
+  // HTTP keep-alive sockets keep the event loop alive after the work is
+  // done, so the process would hang here without an explicit exit.
+  process.exit(0);
 }
 
-main().catch((err) => {
-  console.error('Script failed:', err.message);
-  process.exit(1);
-});
+// Only run the pipeline when executed directly (node dedup.js / npm start).
+// Requiring this file (e.g. from tests) must not trigger a fetch run.
+if (require.main === module) {
+  main().catch((err) => {
+    console.error('Script failed:', err.message);
+    process.exit(1);
+  });
+}
+
+// Exported for tests.
+module.exports = {
+  extractTokens,
+  similarityScore,
+  isDuplicate,
+  filterByAge,
+  buildFeedUrl,
+  buildBundleItems,
+};

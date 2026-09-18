@@ -9,8 +9,32 @@ readable index page - all hosted free on GitHub Pages, refreshed every hour.
 
 No servers, no API keys, no cost.
 
-> New here? Read **[EXPLAINED.md](EXPLAINED.md)** - the same project
-> explained in plain English, no jargon.
+---
+
+## Why it exists
+
+Google News reports the same story many times - once per publisher. Follow a
+topic and you see the same story from five different newspapers. RSS readers
+are the cleanest way to follow news, but they need a feed URL. This project
+creates those URLs automatically, keeps them duplicate-free, and refreshes
+them hourly - so you never have to search Google News again.
+
+The 30-second pitch: "A script runs every hour on GitHub for free. It reads
+a list of topics I care about, fetches the latest news from Google, removes
+duplicate stories, and publishes clean RSS feeds to a free website. I
+subscribe to those feeds in my RSS reader. Adding a topic is just editing a
+text file."
+
+Why these building blocks:
+
+- **RSS** - the oldest, simplest, most universal way to subscribe; every reader supports it
+- **Google News** - free, no API key, covers every topic; a query in, an RSS feed out
+- **Deduplication** - Google returns the same story once per publisher; the point is "read each story once"
+- **GitHub Pages** - free hosting with HTTPS; no server, no domain
+- **GitHub Actions** - free scheduled runs; the refresh robot never sleeps
+- **OPML** - one file imports ALL feeds into any reader in one click
+- **The age filter** - Google fills quiet topics with years-old articles; this keeps feeds relevant
+- **A readable web page too** - scan headlines without an RSS reader
 
 ---
 
@@ -18,13 +42,10 @@ No servers, no API keys, no cost.
 
 | What | URL |
 |---|---|
-| Index page (open in a browser) | https://pratapnayakin.github.io/feeds-dedup/ |
+| Index page (open in a browser - lists every feed and its URL) | https://pratapnayakin.github.io/feeds-dedup/ |
 | One-click subscribe (OPML - import into any reader) | https://pratapnayakin.github.io/feeds-dedup/feeds.opml |
-| Rourkela News | https://pratapnayakin.github.io/feeds-dedup/rourkela.xml |
-| OSHB News | https://pratapnayakin.github.io/feeds-dedup/oshb.xml |
-| Bengaluru Power Cuts | https://pratapnayakin.github.io/feeds-dedup/bengaluru-power.xml |
-| LLM and AI News | https://pratapnayakin.github.io/feeds-dedup/llm.xml |
-| Lohegaon Tiffin Service | https://pratapnayakin.github.io/feeds-dedup/lohegaon-tiffin.xml |
+| Odisha Breaking (merged bundle - one link for all Odisha alerts) | https://pratapnayakin.github.io/feeds-dedup/odisha-breaking.xml |
+| Rourkela Breaking (merged bundle - one link for all Rourkela alerts) | https://pratapnayakin.github.io/feeds-dedup/rourkela-breaking.xml |
 
 Paste any `.xml` URL into an RSS reader (Feedly, Inoreader, NetNewsWire, ...).
 The reader polls it on its normal refresh cycle; the content behind it is
@@ -44,8 +65,9 @@ GitHub Actions (hourly cron, or on every push, or manual)
         |-- 2. for each feed: builds/fetches a Google News RSS search URL
         |-- 3. dedupes the headlines (word-overlap scoring, per feed)
         |-- 4. writes public/<filename>.xml  (clean RSS 2.0)
-        |-- 5. writes public/index.html      (readable index of all feeds)
-        |-- 6. writes public/feeds.opml      (one-click subscribe list)
+        |-- 5. writes public/<bundle>.xml    (merged feeds, cross-deduped)
+        |-- 6. writes public/index.html      (readable index of all feeds)
+        |-- 7. writes public/feeds.opml      (one-click subscribe list)
         |
         v
 upload-pages-artifact --> deploy-pages
@@ -63,10 +85,10 @@ This pipeline collapses those duplicates so you read each story once.
 
 | File | Purpose |
 |---|---|
-| `feeds.json` | **The only file you edit day-to-day.** List of feeds (keywords or full URLs). |
+| `feeds.json` | **The only file you edit day-to-day.** List of feeds (keywords or full URLs) plus optional bundles. |
 | `dedup.js` | The whole engine: fetch, dedupe, write XML + HTML. ~300 lines, commented. |
 | `.github/workflows/update.yml` | The automation: runs the script and deploys to Pages. |
-| `package.json` | Declares the single dependency (`rss-parser`) and the `npm start` script. |
+| `package.json` | Declares the single dependency (`rss-parser`) and the `npm start` / `npm test` scripts. |
 | `package-lock.json` | Pins exact dependency versions. Required by `npm ci` in the workflow. **Must be committed.** |
 | `.gitignore` | Keeps `node_modules/` and `public/` out of git (both are generated/restored). |
 | `public/` | Generated output. Never edit, never commit - rebuilt on every run. |
@@ -89,6 +111,7 @@ git clone https://github.com/pratapnayakin/feeds-dedup.git
 cd feeds-dedup
 npm install        # restores dependencies from the lock file
 npm start          # same as: node dedup.js
+npm test           # runs the test suite (no network needed)
 ```
 
 Console output looks like:
@@ -152,6 +175,30 @@ An explicit `url` always wins over `keywords`.
 - Optional: `"maxAgeDays": 30` drops items older than that many days
   (default 365; change `MAX_AGE_DAYS` in `dedup.js` for a global default).
   Items with a missing date are kept.
+
+### Bundles - several feeds merged into one link
+
+A bundle merges the deduped output of other feeds into one extra RSS file,
+so you can subscribe to many topics through a single URL:
+
+```json
+"bundles": [
+  {
+    "filename": "odisha-breaking",
+    "title": "Odisha Breaking - All Alerts",
+    "description": "Every important Odisha story, merged from the category feeds",
+    "maxItems": 100,
+    "sources": ["odisha", "odisha-crime", "odisha-weather"]
+  }
+]
+```
+
+- `sources` lists the `filename` values of other feeds in this file
+- Items are cross-deduped: the same story appearing in two source feeds
+  appears once in the bundle
+- Sorted newest-first, capped at `maxItems` (default 100)
+- A source that failed this run is simply skipped for that run
+- Bundles appear on the index page and in `feeds.opml` like normal feeds
 
 To add a feed: edit `feeds.json`, commit, push. The workflow deploys it
 automatically. To remove one: delete the entry. The full every-time checklist
@@ -299,9 +346,9 @@ Read this section honestly - these are the edges of the system.
   hiccup, bad query) is logged as `[fail]` in the Actions log and skipped;
   the deploy proceeds and that feed is simply missing from the site until the
   next successful run. Check the log if a feed vanishes.
-- **No retry logic and no fetch timeout.** Six feeds fetched sequentially is
-  fine; adding dozens could hit Google rate limiting. If you scale up, add
-  retries with backoff.
+- **No retry logic and no fetch timeout.** 24 feeds fetched sequentially
+  take ~15 seconds per run - still comfortable. If you scale up much
+  further, add retries with backoff and a fetch timeout.
 
 ### Operational notes
 
@@ -328,6 +375,7 @@ Read this section honestly - these are the edges of the system.
 | Change refresh frequency | Edit the `cron` line in `.github/workflows/update.yml` |
 | Change locale for keyword feeds | Edit `GOOGLE_NEWS_LOCALE` in `dedup.js` |
 | Change the age cutoff | Set `maxAgeDays` per feed in `feeds.json`, or `MAX_AGE_DAYS` in `dedup.js` |
+| Change what a bundle includes | Edit its `sources` list in `feeds.json` |
 | Repo renamed? | Update `SITE_URL` in `dedup.js` (used by `feeds.opml`) |
 
 ---
@@ -340,7 +388,6 @@ Read this section honestly - these are the edges of the system.
 | Workflow red at "Setup Pages" | Pages source not set to "GitHub Actions" | Settings -> Pages -> Source: "GitHub Actions", then re-run the job |
 | A feed vanished from the site | Its fetch failed that run | Check the Actions log for a `[fail]` line; it returns on the next good run |
 | Feed full of old articles | Age cutoff too lenient for that topic | Set `"maxAgeDays": 30` (or lower) on that feed in `feeds.json` |
-| New Alerts-based feed is empty | Alerts only collect content published after creation - no backfill | Normal; items appear as Google indexes new matching pages (can take days for narrow queries). For older posts, use regular Google search or add a Google News companion feed |
 | Reader notifies for old stories | Every new subscription notifies for all items once; afterwards only unseen IDs notify | Expected on first subscribe; ongoing churn is reduced by newest-first ordering - also check the reader app notification settings |
 | Too many duplicate stories | Threshold too high for that topic | Lower `SIMILARITY_THRESHOLD` slightly |
 | Genuinely different stories merged | Threshold too low | Raise `SIMILARITY_THRESHOLD` slightly |

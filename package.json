@@ -4,7 +4,8 @@
   "description": "Fetches RSS feeds, removes near-duplicate headlines, and publishes clean feeds plus a readable index page.",
   "main": "dedup.js",
   "scripts": {
-    "start": "node dedup.js"
+    "start": "node dedup.js",
+    "test": "node test.js"
   },
   "engines": {
     "node": ">=18"
