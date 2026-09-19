@@ -63,6 +63,10 @@ const STOPWORDS = new Set([
 // Raise it if genuinely different stories start merging.
 const SIMILARITY_THRESHOLD = 0.45;
 
+// How many headlines per feed the index page shows. The full list stays in
+// each XML feed; the index is a scannable summary so the file stays small.
+const INDEX_HEADLINES_PER_FEED = 10;
+
 // Per-feed fetch guard. Pure Node, no library option needed.
 // TIMEOUT per attempt, RETRIES extra tries on fail or timeout.
 const FETCH_TIMEOUT_MS = 15000;
@@ -305,7 +309,8 @@ function buildRssXml(feed, items) {
 function buildIndexHtml(results) {
   const sections = results
     .map((result) => {
-      const rows = result.items
+      const shown = result.items.slice(0, INDEX_HEADLINES_PER_FEED);
+      const rows = shown
         .map((item) => {
           const pub = item.pubDate || item.isoDate || '';
           return `
@@ -320,7 +325,7 @@ function buildIndexHtml(results) {
       <section>
         <h2>
           <a href="${escapeText(result.feed.filename)}.xml">${escapeText(result.feed.title)}</a>
-          <small>${result.items.length} of ${result.total} stories</small>
+          <small>top ${shown.length} of ${result.items.length} unique</small>
         </h2>
         <p>${escapeText(result.feed.description)}</p>
         <ul>${rows}
