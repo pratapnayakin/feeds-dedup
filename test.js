@@ -26,6 +26,13 @@ const {
   assert(!tokens.has('odisha') && !tokens.has('tv'), 'strips the publisher tag');
 }
 
+// Odia-script titles tokenize (the Unicode-aware regex keeps non-Latin letters)
+{
+  const tokens = extractTokens('ରାଉରକେଲା ରେ ଖବର');
+  assert(tokens.has('ରାଉରକେଲା'), 'tokenizes Odia-script words');
+  assert(!tokens.has('ରେ'), 'drops short Odia words');
+}
+
 // --- similarityScore -----------------------------------------------------
 {
   assert.strictEqual(

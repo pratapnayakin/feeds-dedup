@@ -94,7 +94,10 @@ function buildFeedUrl(feed) {
 function extractTokens(title) {
   const withoutPublisher = title.replace(/\s*-\s*[^-]+$/, '').toLowerCase();
   const words = withoutPublisher
-    .replace(/[^\w\s]/g, '') // drop punctuation
+    // drop punctuation (Unicode-aware). \p{M} keeps combining marks - Odia
+    // and other Indic vowel signs are marks, not letters, and would
+    // otherwise be stripped, corrupting every word.
+    .replace(/[^\p{L}\p{M}\p{N}\s]/gu, '')
     .split(/\s+/)
     .filter((word) => word.length > 2 && !STOPWORDS.has(word));
   return new Set(words);
@@ -129,6 +132,20 @@ function filterByAge(items, maxAgeDays) {
   return items.filter((item) => {
     const date = new Date(item.pubDate || item.isoDate || '');
     return Number.isNaN(date.getTime()) || date.getTime() >= cutoff;
+  });
+}
+
+/**
+ * Keeps only items whose title contains any of the filter words
+ * (case-insensitive). Slices a broad source down to one topic, e.g. an
+ * Odia-language agency filtered to Rourkela. No "filter" field = keep all.
+ */
+function filterByTitle(items, filterWords) {
+  if (!Array.isArray(filterWords) || filterWords.length === 0) return items;
+  const words = filterWords.map((word) => String(word).toLowerCase());
+  return items.filter((item) => {
+    const title = String(item.title || '').toLowerCase();
+    return words.some((word) => title.includes(word));
   });
 }
 
@@ -337,15 +354,18 @@ function loadConfig() {
   }
 }
 
-/** Fetches one feed, drops old items, dedupes, returns the result (no writing). */
+/** Fetches one feed, drops off-topic and old items, dedupes, returns the result (no writing). */
 async function processFeed(feed, parser) {
   const parsed = await parser.parseURL(buildFeedUrl(feed));
+
+  const titleFiltered = filterByTitle(parsed.items, feed.filter);
+  const titleDropped = parsed.items.length - titleFiltered.length;
 
   const maxAgeDays = Number.isFinite(feed.maxAgeDays)
     ? feed.maxAgeDays
     : MAX_AGE_DAYS;
-  const recentItems = filterByAge(parsed.items, maxAgeDays);
-  const ageDropped = parsed.items.length - recentItems.length;
+  const recentItems = filterByAge(titleFiltered, maxAgeDays);
+  const ageDropped = titleFiltered.length - recentItems.length;
 
   // Newest first, so the freshest version of each story wins dedup and the
   // output order stays stable across runs (less re-notify churn in readers).
@@ -360,7 +380,7 @@ async function processFeed(feed, parser) {
       uniqueItems.push(item);
     }
   }
-  return { feed, items: uniqueItems, total: parsed.items.length, ageDropped };
+  return { feed, items: uniqueItems, total: parsed.items.length, ageDropped, titleDropped };
 }
 
 async function main() {
@@ -398,9 +418,10 @@ async function main() {
 
       const seconds = ((Date.now() - startedAt) / 1000).toFixed(1);
       const ageNote = result.ageDropped > 0 ? ` (-${result.ageDropped} old)` : '';
+      const offNote = result.titleDropped > 0 ? ` (-${result.titleDropped} off-topic)` : '';
       console.log(
         `[ok]   ${String(feed.title).padEnd(18)} ` +
-          `${String(result.total).padStart(3)}${ageNote} -> ${String(result.items.length).padStart(3)} unique  (${seconds}s)`
+          `${String(result.total).padStart(3)}${offNote}${ageNote} -> ${String(result.items.length).padStart(3)} unique  (${seconds}s)`
       );
     } catch (err) {
       console.error(`[fail] ${feed.title || feed.filename}: ${err.message}`);

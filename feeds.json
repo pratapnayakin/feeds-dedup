@@ -57,6 +57,14 @@
       "url": "https://news.google.com/rss/search?q=%28%22Rourkela%22%20OR%20%22Raurkela%22%20OR%20%22Sundargarh%22%29%20%28hospital%20OR%20dengue%20OR%20%22health%20department%22%20OR%20outbreak%29&hl=en-IN&gl=IN&ceid=IN:en"
     },
     {
+      "filename": "satya-alert",
+      "title": "Satya News Alert (Rourkela)",
+      "description": "Odia-language local news, filtered to Rourkela only",
+      "maxAgeDays": 30,
+      "filter": ["ରାଉରକେଲା", "Rourkela", "Raurkela"],
+      "url": "https://satyanewsalert.in/?feed=rss2"
+    },
+    {
       "filename": "odisha",
       "title": "Odisha Headlines",
       "description": "Top stories from Bhubaneswar, Cuttack and the Berhampur region, deduplicated",
@@ -175,7 +183,7 @@
       "title": "Rourkela Breaking - All Alerts",
       "description": "Every important Rourkela story, merged from the category feeds",
       "maxItems": 100,
-      "sources": ["rourkela", "rourkela-crime", "rourkela-accident", "rourkela-weather", "rourkela-exams", "rourkela-govt", "rourkela-power", "rourkela-health"]
+      "sources": ["rourkela", "rourkela-crime", "rourkela-accident", "rourkela-weather", "rourkela-exams", "rourkela-govt", "rourkela-power", "rourkela-health", "satya-alert"]
     }
   ]
 }

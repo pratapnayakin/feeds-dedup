@@ -130,8 +130,8 @@ deployed.
 
 ## Configuring feeds (`feeds.json`)
 
-Every feed is an object with four fields, plus one optional `exclude` list.
-Two ways to define the source:
+Every feed is an object with four fields, plus optional `exclude` and
+`filter` lists. Two ways to define the source:
 
 ### Way 1 - keywords (recommended, scalable)
 
@@ -172,6 +172,9 @@ An explicit `url` always wins over `keywords`.
 - Order in the file = order on the index page
 - Optional: `"exclude": ["football", "cricket"]` appends `-football -cricket`
   to the search query (keyword feeds only; `url` feeds embed their own exclusions)
+- Optional: `"filter": ["Rourkela", "Raurkela"]` keeps only items whose title
+  contains one of these words (case-insensitive) - slices a broad source down
+  to one topic. Works on any script (e.g. Odia titles).
 - Optional: `"maxAgeDays": 30` drops items older than that many days
   (default 365; change `MAX_AGE_DAYS` in `dedup.js` for a global default).
   Items with a missing date are kept.
@@ -372,6 +375,7 @@ Read this section honestly - these are the edges of the system.
 | Make dedup safer | Raise `SIMILARITY_THRESHOLD` (e.g. 0.65) |
 | Ignore more common words | Add to the `STOPWORDS` set in `dedup.js` |
 | Exclude noisy terms from a feed | Add an `"exclude"` list to that feed in `feeds.json` |
+| Slice a broad source to one topic | Add a `"filter"` list to that feed in `feeds.json` |
 | Change refresh frequency | Edit the `cron` line in `.github/workflows/update.yml` |
 | Change locale for keyword feeds | Edit `GOOGLE_NEWS_LOCALE` in `dedup.js` |
 | Change the age cutoff | Set `maxAgeDays` per feed in `feeds.json`, or `MAX_AGE_DAYS` in `dedup.js` |
