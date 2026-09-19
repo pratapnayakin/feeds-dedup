@@ -48,6 +48,8 @@ Why these building blocks:
 | One-click subscribe (OPML - import into any reader) | https://pratapnayakin.github.io/feeds-dedup/feeds.opml |
 | Odisha Breaking (merged bundle - one link for all Odisha alerts) | https://pratapnayakin.github.io/feeds-dedup/odisha-breaking.xml |
 | Rourkela Breaking (merged bundle - one link for all Rourkela alerts) | https://pratapnayakin.github.io/feeds-dedup/rourkela-breaking.xml |
+| AI Breaking (merged bundle - one link for all AI alerts) | https://pratapnayakin.github.io/feeds-dedup/ai-breaking.xml |
+| WebDev Breaking (merged bundle - one link for all web dev and jobs alerts) | https://pratapnayakin.github.io/feeds-dedup/webdev-breaking.xml |
 
 Paste any `.xml` URL into an RSS reader (Feedly, Inoreader, NetNewsWire, ...).
 The reader polls it on its normal refresh cycle; the content behind it is

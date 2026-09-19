@@ -141,19 +141,74 @@
       "url": "https://news.google.com/rss/search?q=%28%22Bengaluru%22%20OR%20%22Bangalore%22%29%20%28%22power%20cut%22%20OR%20%22power%20outage%22%20OR%20%22power%20shutdown%22%20OR%20%22power%20supply%20interruption%22%20OR%20%22electricity%20outage%22%29&hl=en-IN&gl=IN&ceid=IN:en"
     },
     {
-      "filename": "llm",
-      "title": "LLM and AI News",
-      "description": "Model releases, benchmarks, safety and pricing",
-      "maxAgeDays": 90,
-      "url": "https://news.google.com/rss/search?q=%28%22Large%20Language%20Model%22%20OR%20LLM%20OR%20%22Generative%20AI%22%20OR%20%22Foundation%20Model%22%29%20%28%22new%20model%22%20OR%20release%20OR%20launch%20OR%20benchmark%20OR%20leaderboard%20OR%20MMLU%20OR%20jailbreak%20OR%20%22red%20team%22%20OR%20%22AI%20safety%22%20OR%20%22prompt%20injection%22%20OR%20%22open%20weights%22%20OR%20multimodal%20OR%20agentic%20OR%20pricing%20OR%20%22API%20cost%22%20OR%20%22inference%20cost%22%20OR%20security%20OR%20vulnerability%20OR%20%22data%20privacy%22%29%20-law%20-degree%20-%22Master%20of%20Laws%22%20-cryptocurrency%20-university%20-admission&hl=en-US&gl=US&ceid=US:en"
+      "filename": "ai-models",
+      "title": "AI Models",
+      "description": "Model releases, benchmarks and open weights",
+      "maxAgeDays": 30,
+      "url": "https://news.google.com/rss/search?q=%28OpenAI%20OR%20Anthropic%20OR%20%22Claude%20AI%22%20OR%20%22Google%20Gemini%22%20OR%20Llama%20OR%20Mistral%20OR%20DeepSeek%20OR%20LLM%20OR%20%22Large%20Language%20Model%22%20OR%20%22Generative%20AI%22%29%20%28release%20OR%20launch%20OR%20%22new%20model%22%20OR%20benchmark%20OR%20leaderboard%20OR%20%22open%20weights%22%20OR%20multimodal%20OR%20agentic%29%20-law%20-degree%20-cryptocurrency%20-university%20-admission%20-movie&hl=en-US&gl=US&ceid=US:en"
     },
     {
-      "filename": "webdev",
-      "title": "Web Dev and Tools News",
-      "description": "Next.js, TypeScript, databases, Docker and developer tooling",
+      "filename": "ai-safety",
+      "title": "AI Safety",
+      "description": "Jailbreaks, red teaming, prompt injection, regulation and deepfakes",
+      "maxAgeDays": 60,
+      "url": "https://news.google.com/rss/search?q=%28AI%20OR%20LLM%20OR%20OpenAI%20OR%20Anthropic%20OR%20%22Google%20Gemini%22%29%20%28%22AI%20safety%22%20OR%20jailbreak%20OR%20%22red%20team%22%20OR%20%22prompt%20injection%22%20OR%20regulation%20OR%20deepfake%20OR%20misuse%29%20-law%20-degree%20-cryptocurrency%20-university%20-movie&hl=en-US&gl=US&ceid=US:en"
+    },
+    {
+      "filename": "ai-pricing",
+      "title": "AI Pricing",
+      "description": "API cost, inference cost and price changes",
+      "maxAgeDays": 60,
+      "url": "https://news.google.com/rss/search?q=%28LLM%20OR%20OpenAI%20OR%20Anthropic%20OR%20%22Google%20Gemini%22%20OR%20%22Claude%20AI%22%20OR%20%22Generative%20AI%22%29%20%28pricing%20OR%20%22API%20cost%22%20OR%20%22inference%20cost%22%20OR%20%22price%20cut%22%29&hl=en-US&gl=US&ceid=US:en"
+    },
+    {
+      "filename": "ai-industry",
+      "title": "AI Industry",
+      "description": "Funding, acquisitions, IPO and lawsuits",
+      "maxAgeDays": 60,
+      "url": "https://news.google.com/rss/search?q=%28OpenAI%20OR%20Anthropic%20OR%20%22Google%20DeepMind%22%20OR%20Mistral%20OR%20%22AI%20startup%22%20OR%20%22AI%20company%22%29%20%28funding%20OR%20acquisition%20OR%20partnership%20OR%20lawsuit%20OR%20IPO%20OR%20valuation%20OR%20%22billion%22%29%20-cryptocurrency%20-movie&hl=en-US&gl=US&ceid=US:en"
+    },
+    {
+      "filename": "webdev-frontend",
+      "title": "WebDev Frontend",
+      "description": "Next.js, React, Tailwind, CSS and web performance",
       "maxAgeDays": 30,
-      "keywords": ["Next.js", "React Server Components", "TypeScript", "Prisma ORM", "PostgreSQL", "Redis", "Docker", "GitHub Actions", "Playwright", "OWASP LLM", "Core Web Vitals", "OpenAI API"],
-      "exclude": ["football", "cricket", "movie"]
+      "url": "https://news.google.com/rss/search?q=%28Next.js%20OR%20React%20OR%20%22React%20Server%20Components%22%20OR%20%22Core%20Web%20Vitals%22%20OR%20Tailwind%20OR%20CSS%20OR%20%22web%20performance%22%29%20-football%20-cricket%20-movie&hl=en-IN&gl=IN&ceid=IN:en"
+    },
+    {
+      "filename": "webdev-backend",
+      "title": "WebDev Backend",
+      "description": "PostgreSQL, Redis, Prisma, Node.js, GraphQL and MongoDB",
+      "maxAgeDays": 30,
+      "url": "https://news.google.com/rss/search?q=%28PostgreSQL%20OR%20Redis%20OR%20%22Prisma%20ORM%22%20OR%20%22Node.js%22%20OR%20GraphQL%20OR%20MongoDB%20OR%20%22REST%20API%22%29%20-football%20-cricket%20-movie&hl=en-IN&gl=IN&ceid=IN:en"
+    },
+    {
+      "filename": "webdev-devops",
+      "title": "WebDev DevOps",
+      "description": "Docker, GitHub Actions, Kubernetes, Terraform and CI/CD",
+      "maxAgeDays": 30,
+      "url": "https://news.google.com/rss/search?q=%28Docker%20OR%20%22GitHub%20Actions%22%20OR%20Kubernetes%20OR%20DevOps%20OR%20Terraform%20OR%20%22CI%2FCD%22%29%20-football%20-cricket%20-movie&hl=en-IN&gl=IN&ceid=IN:en"
+    },
+    {
+      "filename": "webdev-security",
+      "title": "WebDev Security",
+      "description": "OWASP, CVEs, data breaches and ransomware",
+      "maxAgeDays": 30,
+      "url": "https://news.google.com/rss/search?q=%28OWASP%20OR%20CVE%20OR%20%22data%20breach%22%20OR%20ransomware%20OR%20%22web%20security%22%20OR%20%22security%20vulnerability%22%29%20-crypto%20-movie&hl=en-IN&gl=IN&ceid=IN:en"
+    },
+    {
+      "filename": "india-jobs",
+      "title": "India IT Jobs",
+      "description": "Hiring, off-campus drives and layoffs at IT companies",
+      "maxAgeDays": 30,
+      "url": "https://news.google.com/rss/search?q=%28TCS%20OR%20Infosys%20OR%20Wipro%20OR%20HCL%20OR%20Accenture%20OR%20Cognizant%20OR%20Capgemini%29%20%28hiring%20OR%20recruitment%20OR%20vacancy%20OR%20%22off%20campus%22%20OR%20%22walk-in%22%20OR%20layoffs%29&hl=en-IN&gl=IN&ceid=IN:en"
+    },
+    {
+      "filename": "global-remote-jobs",
+      "title": "Global and Remote Jobs",
+      "description": "Visa sponsorship, work visas, H-1B and remote hiring",
+      "maxAgeDays": 30,
+      "url": "https://news.google.com/rss/search?q=%28%22visa%20sponsorship%22%20OR%20%22work%20visa%22%20OR%20%22H-1B%22%20OR%20%22remote%20job%22%20OR%20%22remote%20hiring%22%20OR%20%22work%20from%20home%22%29%20%28developer%20OR%20engineer%20OR%20%22tech%20worker%22%20OR%20IT%20OR%20Indian%29&hl=en-US&gl=US&ceid=US:en"
     },
     {
       "filename": "india-breaking",
@@ -184,6 +239,20 @@
       "description": "Every important Rourkela story, merged from the category feeds",
       "maxItems": 100,
       "sources": ["rourkela", "rourkela-crime", "rourkela-accident", "rourkela-weather", "rourkela-exams", "rourkela-govt", "rourkela-power", "rourkela-health", "satya-alert"]
+    },
+    {
+      "filename": "ai-breaking",
+      "title": "AI Breaking - All Alerts",
+      "description": "Every AI story, merged from the category feeds",
+      "maxItems": 100,
+      "sources": ["ai-models", "ai-safety", "ai-pricing", "ai-industry"]
+    },
+    {
+      "filename": "webdev-breaking",
+      "title": "WebDev Breaking - All Alerts",
+      "description": "Every web dev and jobs story, merged from the category feeds",
+      "maxItems": 100,
+      "sources": ["webdev-frontend", "webdev-backend", "webdev-devops", "webdev-security", "india-jobs", "global-remote-jobs"]
     }
   ]
 }
