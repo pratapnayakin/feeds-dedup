@@ -61,6 +61,11 @@ const STOPWORDS = new Set([
 // fraction of their meaningful words (0 = nothing matches, 1 = identical).
 const SIMILARITY_THRESHOLD = 0.55;
 
+// Per-feed fetch guard. Pure Node, no library option needed.
+// TIMEOUT per attempt, RETRIES extra tries on fail or timeout.
+const FETCH_TIMEOUT_MS = 15000;
+const FETCH_RETRIES = 2;
+
 // ---------------------------------------------------------------------------
 // Feed URLs
 // ---------------------------------------------------------------------------
@@ -83,17 +88,90 @@ function buildFeedUrl(feed) {
   return `${GOOGLE_NEWS_SEARCH}?${params}`;
 }
 
+/**
+ * True for Google News URLs. Publisher-strip applies only here.
+ * Generic RSS (custom sites) keeps its hyphens intact.
+ */
+function isGoogleNewsUrl(url) {
+  return String(url || '').includes('news.google.com');
+}
+
+/**
+ * Parse one URL with timeout. Rejects if parser takes too long.
+ * Uses Promise.race so no dependency on parser timeout options.
+ */
+function parseWithTimeout(parser, url) {
+  let timer = null;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`fetch timeout after ${FETCH_TIMEOUT_MS}ms`)), FETCH_TIMEOUT_MS);
+  });
+  const fetch = parser.parseURL(url).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
+  return Promise.race([fetch, timeout]);
+}
+
+/**
+ * Fetches with retry. Retries on network fail or timeout.
+ * Throws last error after all attempts, caller logs [fail].
+ */
+async function fetchWithRetry(parser, url) {
+  let lastErr = null;
+  for (let attempt = 0; attempt <= FETCH_RETRIES; attempt++) {
+    try {
+      return await parseWithTimeout(parser, url);
+    } catch (err) {
+      lastErr = err;
+      // small backoff: 1s, 2s. Keeps hourly run fast but tolerant.
+      if (attempt < FETCH_RETRIES) {
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+      }
+    }
+  }
+  throw lastErr;
+}
+
+/**
+ * Fails fast on config mistakes. Call once in main before fetching.
+ * Checks duplicate filenames and unknown bundle sources.
+ */
+function validateConfig(feeds, bundles) {
+  const seen = new Set();
+  for (const feed of feeds) {
+    if (!feed.filename) throw new Error('feed missing "filename"');
+    if (seen.has(feed.filename)) throw new Error(`duplicate filename "${feed.filename}"`);
+    seen.add(feed.filename);
+    if (!feed.url && (!Array.isArray(feed.keywords) || feed.keywords.length === 0)) {
+      throw new Error(`feed "${feed.filename}" needs either "keywords" or "url"`);
+    }
+  }
+  const names = new Set([...seen, ...(bundles || []).map((b) => b.filename)]);
+  for (const bundle of bundles || []) {
+    for (const src of bundle.sources || []) {
+      if (!seen.has(src)) throw new Error(`bundle "${bundle.filename}" unknown source "${src}"`);
+    }
+    if (names.has(bundle.filename) && seen.has(bundle.filename)) {
+      throw new Error(`bundle filename "${bundle.filename}" collides with feed filename`);
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Headline comparison
 // ---------------------------------------------------------------------------
 
 /**
  * Turns a headline into a Set of meaningful lowercase words.
- * Strips the trailing " - Publisher" tag Google News appends first.
+ * Strips trailing " - Publisher" only for Google News titles.
+ * Generic RSS keeps hyphens, else "Rourkela - Power cut" would break.
  */
-function extractTokens(title) {
-  const withoutPublisher = title.replace(/\s*-\s*[^-]+$/, '').toLowerCase();
-  const words = withoutPublisher
+function extractTokens(title, stripPublisher = true) {
+  const input = String(title || '');
+  const withoutPublisher = stripPublisher
+    ? input.replace(/\s*-\s*[^-]+$/, '')
+    : input;
+  const lowered = withoutPublisher.toLowerCase();
+  const words = lowered
     // drop punctuation (Unicode-aware). \p{M} keeps combining marks - Odia
     // and other Indic vowel signs are marks, not letters, and would
     // otherwise be stripped, corrupting every word.
@@ -182,16 +260,19 @@ function shortDate(dateString) {
 /** Builds one RSS 2.0 channel from a feed config and its unique items. */
 function buildRssXml(feed, items) {
   const itemsXml = items
-    .map(
-      (item) => `
+    .map((item) => {
+      // Fallback chain: pubDate -> isoDate -> now. Avoids empty pubDate
+      // which some readers reject. Same chain as dateValue().
+      const pub = item.pubDate || item.isoDate || new Date().toUTCString();
+      return `
     <item>
       <title>${escapeText(item.title)}</title>
       <link>${escapeText(item.link)}</link>
       <guid isPermaLink="false">${escapeText(item.guid || item.link)}</guid>
-      <pubDate>${escapeText(item.pubDate)}</pubDate>
+      <pubDate>${escapeText(pub)}</pubDate>
       <description>${escapeText(item.contentSnippet || item.content || '')}</description>
-    </item>`
-    )
+    </item>`;
+    })
     .join('');
 
   return `<?xml version="1.0" encoding="UTF-8" ?>
@@ -211,13 +292,14 @@ function buildIndexHtml(results) {
   const sections = results
     .map((result) => {
       const rows = result.items
-        .map(
-          (item) => `
+        .map((item) => {
+          const pub = item.pubDate || item.isoDate || '';
+          return `
           <li>
             <a href="${escapeText(item.link)}">${escapeText(item.title)}</a>
-            <time>${escapeText(shortDate(item.pubDate))}</time>
-          </li>`
-        )
+            <time>${escapeText(shortDate(pub))}</time>
+          </li>`;
+        })
         .join('');
 
       return `
@@ -323,7 +405,10 @@ function buildBundleItems(bundle, resultsByFilename) {
     const result = resultsByFilename[filename];
     if (!result) continue; // source failed this run - the bundle skips it
     for (const item of result.items) {
-      const tokens = extractTokens(item.title || '');
+      // Per-item decision: only Google News links get publisher-strip.
+      // Mixed bundles (Google + custom RSS) stay correct.
+      const strip = isGoogleNewsUrl(item.link);
+      const tokens = extractTokens(item.title || '', strip);
       if (!isDuplicate(tokens, seen)) {
         seen.push(tokens);
         merged.push(item);
@@ -356,7 +441,9 @@ function loadConfig() {
 
 /** Fetches one feed, drops off-topic and old items, dedupes, returns the result (no writing). */
 async function processFeed(feed, parser) {
-  const parsed = await parser.parseURL(buildFeedUrl(feed));
+  const url = buildFeedUrl(feed);
+  const strip = isGoogleNewsUrl(url);
+  const parsed = await fetchWithRetry(parser, url);
 
   const titleFiltered = filterByTitle(parsed.items, feed.filter);
   const titleDropped = parsed.items.length - titleFiltered.length;
@@ -374,7 +461,7 @@ async function processFeed(feed, parser) {
   const acceptedSets = [];
   const uniqueItems = [];
   for (const item of recentItems) {
-    const tokens = extractTokens(item.title || '');
+    const tokens = extractTokens(item.title || '', strip);
     if (!isDuplicate(tokens, acceptedSets)) {
       acceptedSets.push(tokens);
       uniqueItems.push(item);
@@ -387,6 +474,8 @@ async function main() {
   const config = loadConfig();
   const feeds = Array.isArray(config.feeds) ? config.feeds : [];
   const bundles = Array.isArray(config.bundles) ? config.bundles : [];
+  // Fail fast on typos: duplicate filenames, unknown bundle sources.
+  validateConfig(feeds, bundles);
   if (feeds.length === 0) {
     console.log('No feeds found in feeds.json - nothing to do.');
     return;
@@ -485,6 +574,11 @@ module.exports = {
   similarityScore,
   isDuplicate,
   filterByAge,
+  filterByTitle,
+  escapeText,
+  buildRssXml,
   buildFeedUrl,
   buildBundleItems,
+  isGoogleNewsUrl,
+  validateConfig,
 };

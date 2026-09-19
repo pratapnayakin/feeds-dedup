@@ -12,8 +12,13 @@ const {
   similarityScore,
   isDuplicate,
   filterByAge,
+  filterByTitle,
+  escapeText,
+  buildRssXml,
   buildFeedUrl,
   buildBundleItems,
+  isGoogleNewsUrl,
+  validateConfig,
 } = require('./dedup.js');
 
 // --- extractTokens -------------------------------------------------------
@@ -124,6 +129,79 @@ const {
   assert.strictEqual(
     buildBundleItems({ sources: ['a'], maxItems: 100 }, { a: many }).length, 100,
     'caps at maxItems'
+  );
+}
+
+// --- filterByTitle -------------------------------------------------------
+// Keeps only items whose title contains a filter word, case-insensitive.
+// No filter list means keep all.
+{
+  const items = [
+    { title: 'Power cut in Rourkela today' },
+    { title: 'Cricket match in Cuttack' },
+  ];
+  const kept = filterByTitle(items, ['rourkela']);
+  assert.strictEqual(kept.length, 1, 'keeps matching title only');
+  assert.strictEqual(kept[0].title, 'Power cut in Rourkela today', 'keeps correct item');
+  assert.strictEqual(filterByTitle(items, []).length, 2, 'empty filter keeps all');
+  assert.strictEqual(filterByTitle(items, null).length, 2, 'missing filter keeps all');
+}
+
+// --- escapeText ----------------------------------------------------------
+// Escapes XML chars so feeds never break on &, <, >, quotes.
+{
+  assert.strictEqual(
+    escapeText('a&b<c>d"e\'f'),
+    'a&amp;b&lt;c&gt;d&quot;e&apos;f',
+    'escapes all five XML chars'
+  );
+  assert.strictEqual(escapeText(null), '', 'handles missing text');
+}
+
+// --- buildRssXml pubDate fallback ----------------------------------------
+// Missing pubDate falls back to isoDate, then to now. Never empty.
+{
+  const feed = { title: 'T', description: 'D' };
+  const withIso = buildRssXml(feed, [
+    { title: 'A', link: 'https://example.com/a', isoDate: 'Wed, 16 Sep 2026 10:00:00 GMT' },
+  ]);
+  assert(withIso.includes('Wed, 16 Sep 2026'), 'uses isoDate when pubDate missing');
+
+  const withNone = buildRssXml(feed, [{ title: 'B', link: 'https://example.com/b' }]);
+  assert(!withNone.includes('<pubDate></pubDate>'), 'never writes empty pubDate');
+  assert(withNone.includes('<pubDate>'), 'always writes pubDate tag');
+}
+
+// --- isGoogleNewsUrl + validateConfig ------------------------------------
+// Publisher-strip applies only to Google News. Config fails fast on typos.
+{
+  assert.strictEqual(
+    isGoogleNewsUrl('https://news.google.com/rss/search?q=x'),
+    true,
+    'detects Google News URL'
+  );
+  assert.strictEqual(
+    isGoogleNewsUrl('https://satyanewsalert.in/?feed=rss2'),
+    false,
+    'custom RSS is not Google News'
+  );
+  // Generic titles keep hyphens when strip is false.
+  const kept = extractTokens('Rourkela - Power cut today', false);
+  assert(kept.has('power') && kept.has('cut'), 'generic title keeps hyphen words');
+
+  assert.throws(
+    () => validateConfig([{ filename: 'a', keywords: ['x'] }, { filename: 'a', keywords: ['y'] }], []),
+    /duplicate filename/,
+    'catches duplicate filename'
+  );
+  assert.throws(
+    () => validateConfig([{ filename: 'a', keywords: ['x'] }], [{ filename: 'b', sources: ['missing'] }]),
+    /unknown source/,
+    'catches unknown bundle source'
+  );
+  assert.doesNotThrow(
+    () => validateConfig([{ filename: 'a', keywords: ['x'] }], [{ filename: 'b', sources: ['a'] }]),
+    'accepts valid config'
   );
 }
 

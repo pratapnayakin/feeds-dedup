@@ -9,6 +9,8 @@ readable index page - all hosted free on GitHub Pages, refreshed every hour.
 
 No servers, no API keys, no cost.
 
+Personal project, all rights reserved. View-only, no reuse without permission.
+
 ---
 
 ## Why it exists
@@ -86,7 +88,7 @@ This pipeline collapses those duplicates so you read each story once.
 | File | Purpose |
 |---|---|
 | `feeds.json` | **The only file you edit day-to-day.** List of feeds (keywords or full URLs) plus optional bundles. |
-| `dedup.js` | The whole engine: fetch, dedupe, write XML + HTML. ~300 lines, commented. |
+| `dedup.js` | The whole engine: fetch, dedupe, write XML + HTML. ~580 lines, commented. |
 | `.github/workflows/update.yml` | The automation: runs the script and deploys to Pages. |
 | `package.json` | Declares the single dependency (`rss-parser`) and the `npm start` / `npm test` scripts. |
 | `package-lock.json` | Pins exact dependency versions. Required by `npm ci` in the workflow. **Must be committed.** |
@@ -349,9 +351,7 @@ Read this section honestly - these are the edges of the system.
   hiccup, bad query) is logged as `[fail]` in the Actions log and skipped;
   the deploy proceeds and that feed is simply missing from the site until the
   next successful run. Check the log if a feed vanishes.
-- **No retry logic and no fetch timeout.** 24 feeds fetched sequentially
-  take ~15 seconds per run - still comfortable. If you scale up much
-  further, add retries with backoff and a fetch timeout.
+- **Fetch guard with retry.** Each feed has 15s timeout + 2 retries with backoff. 24 feeds fetched sequentially take ~15-30 seconds per run. A feed that still fails is skipped for that run.
 
 ### Operational notes
 
