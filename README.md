@@ -250,7 +250,9 @@ through:
 1. **Strip the publisher tag.** Google News appends ` - Publisher Name` to
    titles. It is removed *for comparison only* (kept in the output).
 2. **Tokenize.** Lowercase, drop punctuation, split into words, drop words
-   shorter than 3 characters and common stopwords (the, and, from, ...).
+   shorter than 3 characters and common stopwords (the, and, from, ...),
+   then strip common suffixes (light stemming: `arrested`/`arrest` and
+   `outages`/`outage` compare as one word).
 3. **Score against every already-accepted headline** using the
    Sorensen-Dice coefficient:
 
@@ -258,7 +260,7 @@ through:
    score = (2 x shared words) / (words in A + words in B)
    ```
 
-4. **Threshold.** If any score is >= `SIMILARITY_THRESHOLD` (0.55, a constant
+4. **Threshold.** If any score is >= `SIMILARITY_THRESHOLD` (0.45, a constant
    at the top of `dedup.js`), the headline is a duplicate and is dropped.
    Otherwise it is accepted and becomes a new comparison target.
 
@@ -267,12 +269,15 @@ Worked example:
 - `"Rourkela Excise Superintendent held with cash - Odisha TV"`
 - `"Rourkela Excise Superintendent arrested - New Indian Express"`
 
-After stripping and tokenizing they share most words, score well above 0.55,
+After stripping and tokenizing they share most words, score well above 0.45,
 and only the first is kept.
 
 **Tuning direction:** lower the threshold -> more aggressive dedup (more
 reworded duplicates caught, but risk of merging genuinely different stories).
-Raise it -> safer, but more near-duplicates survive. 0.55 is a middle ground.
+Raise it -> safer, but more near-duplicates survive. 0.45 is tuned from run
+data: it catches reworded duplicates of big news cycles. Going lower starts
+merging genuinely different stories (real example: two unrelated "how will
+the stock react" headlines share 44% of their words).
 
 ---
 
@@ -304,8 +309,11 @@ Read this section honestly - these are the edges of the system.
   threshold survive (real example: five differently-worded headlines about
   the same Rourkela Excise bribe arrest all appeared in one run). Lowering
   the threshold catches more but risks false merges.
-- **No stemming.** `outage` and `outages` are different words and do not
-  match. This lets some same-story headlines through.
+- **Light stemming only.** `arrested`/`arrest` and `outages`/`outage` now
+  compare as one word, but `held`/`hold` still do not. Reworded headlines
+  of the same big story can still slip through - word overlap between
+  same-story headlines ranges from near-zero to high, so no threshold
+  separates them perfectly.
 - **Dedup is per feed, not across feeds.** The same story can appear in both
   the Rourkela feed and the OSHB feed. Each feed is deduped independently.
 - **First-seen wins.** Items are processed in the order Google returns them;
@@ -373,7 +381,7 @@ Read this section honestly - these are the edges of the system.
 | Add a feed | Edit `feeds.json` (keywords or url), commit, push |
 | Remove a feed | Delete its entry from `feeds.json`, commit, push |
 | Force an instant refresh | Actions tab -> "Update News Feed" -> "Run workflow" |
-| Make dedup more aggressive | Lower `SIMILARITY_THRESHOLD` in `dedup.js` (e.g. 0.45) |
+| Make dedup more aggressive | Lower `SIMILARITY_THRESHOLD` in `dedup.js` (e.g. 0.40) |
 | Make dedup safer | Raise `SIMILARITY_THRESHOLD` (e.g. 0.65) |
 | Ignore more common words | Add to the `STOPWORDS` set in `dedup.js` |
 | Exclude noisy terms from a feed | Add an `"exclude"` list to that feed in `feeds.json` |

@@ -59,7 +59,9 @@ const STOPWORDS = new Set([
 
 // Two headlines count as the same story when they share at least this
 // fraction of their meaningful words (0 = nothing matches, 1 = identical).
-const SIMILARITY_THRESHOLD = 0.55;
+// 0.45, tuned from run data: catches reworded duplicates of big news cycles.
+// Raise it if genuinely different stories start merging.
+const SIMILARITY_THRESHOLD = 0.45;
 
 // Per-feed fetch guard. Pure Node, no library option needed.
 // TIMEOUT per attempt, RETRIES extra tries on fail or timeout.
@@ -161,6 +163,17 @@ function validateConfig(feeds, bundles) {
 // ---------------------------------------------------------------------------
 
 /**
+ * Light stemmer: strips common English suffixes so "arrested"/"arrest" and
+ * "outages"/"outage" compare as the same word. A heuristic, not linguistics.
+ * No "es" rule on purpose: for headline words (outages, issues, cases,
+ * releases) the "e" belongs to the stem, so stripping bare "s" is correct.
+ * Non-Latin words (Odia) never match these suffixes, so they pass through.
+ */
+function stem(word) {
+  return word.replace(/(ing|ed|s)$/, '');
+}
+
+/**
  * Turns a headline into a Set of meaningful lowercase words.
  * Strips trailing " - Publisher" only for Google News titles.
  * Generic RSS keeps hyphens, else "Rourkela - Power cut" would break.
@@ -177,7 +190,8 @@ function extractTokens(title, stripPublisher = true) {
     // otherwise be stripped, corrupting every word.
     .replace(/[^\p{L}\p{M}\p{N}\s]/gu, '')
     .split(/\s+/)
-    .filter((word) => word.length > 2 && !STOPWORDS.has(word));
+    .filter((word) => word.length > 2 && !STOPWORDS.has(word))
+    .map(stem);
   return new Set(words);
 }
 

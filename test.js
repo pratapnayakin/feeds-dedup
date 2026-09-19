@@ -38,6 +38,17 @@ const {
   assert(!tokens.has('ରେ'), 'drops short Odia words');
 }
 
+// --- stemming --------------------------------------------------------------
+{
+  const a = extractTokens('Man arrested in Rourkela theft case');
+  const b = extractTokens('Rourkela theft: man arrest by police');
+  assert(a.has('arrest') && b.has('arrest'), 'stems suffixes (arrested -> arrest)');
+
+  const c = extractTokens('Power outages reported in city');
+  const d = extractTokens('Power outage reported in city');
+  assert(c.has('outage') && d.has('outage'), 'stems plurals (outages -> outage, matches outage)');
+}
+
 // --- similarityScore -----------------------------------------------------
 {
   assert.strictEqual(
@@ -56,7 +67,7 @@ const {
 
 // --- isDuplicate ---------------------------------------------------------
 {
-  const seen = [new Set(['rourkela', 'excise', 'superintendent', 'held', 'cash'])];
+  const seen = [extractTokens('Rourkela Excise Superintendent held with cash - Odisha TV')];
 
   // shares rourkela, excise, superintendent: score = 2*3 / (5+4) = 0.67
   const dup = extractTokens('Rourkela Excise Superintendent arrested - New Indian Express');
