@@ -1,6 +1,6 @@
-# feeds-dedup
+# PN Broadcast
 
-![Update News Feed](https://github.com/pratapnayakin/feeds-dedup/actions/workflows/update.yml/badge.svg)
+![Update News Feed](https://github.com/pratapnayakin/pn-broadcast/actions/workflows/update.yml/badge.svg)
 
 A self-updating, deduplicated RSS feed service. It fetches news from Google
 News search feeds, removes near-duplicate headlines (the same story reported
@@ -44,12 +44,12 @@ Why these building blocks:
 
 | What | URL |
 |---|---|
-| Index page (open in a browser - lists every feed and its URL) | https://pratapnayakin.github.io/feeds-dedup/ |
-| One-click subscribe (OPML - import into any reader) | https://pratapnayakin.github.io/feeds-dedup/feeds.opml |
-| Odisha Breaking (merged bundle - one link for all Odisha alerts) | https://pratapnayakin.github.io/feeds-dedup/odisha-breaking.xml |
-| Rourkela Breaking (merged bundle - one link for all Rourkela alerts) | https://pratapnayakin.github.io/feeds-dedup/rourkela-breaking.xml |
-| AI Breaking (merged bundle - one link for all AI alerts) | https://pratapnayakin.github.io/feeds-dedup/ai-breaking.xml |
-| WebDev Breaking (merged bundle - one link for all web dev and jobs alerts) | https://pratapnayakin.github.io/feeds-dedup/webdev-breaking.xml |
+| Index page (open in a browser - lists every feed and its URL) | https://pratapnayakin.github.io/pn-broadcast/ |
+| One-click subscribe (OPML - import into any reader) | https://pratapnayakin.github.io/pn-broadcast/feeds.opml |
+| Odisha Breaking (merged bundle - one link for all Odisha alerts) | https://pratapnayakin.github.io/pn-broadcast/odisha-breaking.xml |
+| Rourkela Breaking (merged bundle - one link for all Rourkela alerts) | https://pratapnayakin.github.io/pn-broadcast/rourkela-breaking.xml |
+| AI Breaking (merged bundle - one link for all AI alerts) | https://pratapnayakin.github.io/pn-broadcast/ai-breaking.xml |
+| WebDev Breaking (merged bundle - one link for all web dev and jobs alerts) | https://pratapnayakin.github.io/pn-broadcast/webdev-breaking.xml |
 
 Paste any `.xml` URL into an RSS reader (Feedly, Inoreader, NetNewsWire, ...).
 The reader polls it on its normal refresh cycle; the content behind it is
@@ -77,7 +77,7 @@ GitHub Actions (30-minute cron, or on every push, or manual)
 upload-pages-artifact --> deploy-pages
         |
         v
-https://pratapnayakin.github.io/feeds-dedup/  -->  your RSS reader
+https://pratapnayakin.github.io/pn-broadcast/  -->  your RSS reader
 ```
 
 Key idea: Google News returns the same story many times (once per publisher).
@@ -111,8 +111,8 @@ This pipeline collapses those duplicates so you read each story once.
 ## Local setup (from zero)
 
 ```bash
-git clone https://github.com/pratapnayakin/feeds-dedup.git
-cd feeds-dedup
+git clone https://github.com/pratapnayakin/pn-broadcast.git
+cd pn-broadcast
 npm install        # restores dependencies from the lock file
 npm start          # same as: node dedup.js
 npm test           # runs the test suite (no network needed)
@@ -223,7 +223,7 @@ you opt in - the default is off.
 
 1. Install the free ntfy app (Android or iOS).
 2. Tap the plus sign and subscribe to a topic. Topic names are automatic:
-   `feeds-dedup-<filename>`, e.g. `feeds-dedup-rourkela-breaking`.
+   `pn-broadcast-<filename>`, e.g. `pn-broadcast-rourkela-breaking`.
 3. Repeat for each feed you want notified.
 
 ### Turning notifications on for a feed
@@ -273,7 +273,7 @@ manual - the site updates, your reader does not.
 2. Optional but wise: run `npm start` and check `public/index.html`
 3. Commit and push to `main`
 4. Wait for the green workflow run (~30s) - the new `<filename>.xml` is live
-5. **Manually** add `https://pratapnayakin.github.io/feeds-dedup/<filename>.xml`
+5. **Manually** add `https://pratapnayakin.github.io/pn-broadcast/<filename>.xml`
    to your RSS reader - or re-import `feeds.opml`, which now includes it
    (re-import behavior varies by reader, so check for duplicates)
 
@@ -461,8 +461,8 @@ Read this section honestly - these are the edges of the system.
 
 ## Quick reference
 
-- Repo: https://github.com/pratapnayakin/feeds-dedup (public)
-- Site: https://pratapnayakin.github.io/feeds-dedup/
+- Repo: https://github.com/pratapnayakin/pn-broadcast (public)
+- Site: https://pratapnayakin.github.io/pn-broadcast/
 - Engine: `dedup.js` (Node, single dependency: `rss-parser`)
 - Config: `feeds.json` (keywords for simple feeds, `url` for complex ones)
 - Subscribe once: import `feeds.opml` into any RSS reader

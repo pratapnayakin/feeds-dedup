@@ -23,7 +23,7 @@ const CONFIG_FILE = path.join(__dirname, 'feeds.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const STATE_FILE = path.join(__dirname, '.notify-state.json');
 const NTFY_BASE = 'https://ntfy.sh';
-const TOPIC_PREFIX = 'feeds-dedup-';
+const TOPIC_PREFIX = 'pn-broadcast-';
 const MAX_PER_FEED_PER_RUN = 5;
 
 /** Loads feeds.json. */
