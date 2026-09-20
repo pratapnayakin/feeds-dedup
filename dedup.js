@@ -467,9 +467,9 @@ function buildIndexHtml(results) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Deduped RSS feeds for Rourkela, Odisha, AI and web dev. Same story, many publishers, one headline.">
+  <meta name="description" content="PN Broadcast - deduped RSS feeds for Rourkela, Odisha, AI and web dev. Same story, many publishers, one headline.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23e86a17'/><circle cx='10' cy='22' r='3' fill='white'/><path d='M6 14a10 10 0 0 1 10 10' stroke='white' stroke-width='3' fill='none' stroke-linecap='round'/><path d='M6 7a17 17 0 0 1 17 17' stroke='white' stroke-width='3' fill='none' stroke-linecap='round'/></svg>">
-  <title>Rourkela Odisha Deduped Feeds</title>
+  <title>PN Broadcast</title>
   <style>
     :root {
       --bg: #fafafa;
@@ -574,7 +574,7 @@ function buildIndexHtml(results) {
 <body>
   <div class="wrap">
     <header class="masthead">
-      <h1 class="brand">Deduped News</h1>
+      <h1 class="brand">PN Broadcast</h1>
       <p class="tagline">Same story, many publishers - one headline.</p>
       <div class="mast-row">
         <span class="updated">Updated ${escapeText(updated)}</span>
