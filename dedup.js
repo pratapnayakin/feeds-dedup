@@ -294,6 +294,13 @@ function ageLabel(dateString) {
   return days > 3 ? ` (${days}d old)` : '';
 }
 
+/** Publisher name from a Google News title suffix, e.g. " - The Hindu". */
+function publisherOf(item) {
+  if (!isGoogleNewsUrl(item.link)) return '';
+  const m = String(item.title || '').match(/\s*-\s*([^-]+)$/);
+  return m ? m[1].trim() : '';
+}
+
 /** Builds one RSS 2.0 channel from a feed config and its unique items. */
 function buildRssXml(feed, items) {
   // Self link for validators and readers. Base feeds carry filename,
@@ -328,35 +335,80 @@ function buildRssXml(feed, items) {
 </rss>`;
 }
 
-/** Builds the readable index page listing every feed and its headlines. */
-function buildIndexHtml(results) {
-  const sections = results
-    .map((result) => {
-      const shown = result.items.slice(0, INDEX_HEADLINES_PER_FEED);
-      const rows = shown
-        .map((item) => {
-          const pub = item.pubDate || item.isoDate || '';
-          return `
-          <li>
-            <a href="${escapeText(item.link)}">${escapeText(item.title)}</a>
-            <time>${escapeText(shortDate(pub))}${escapeText(ageLabel(pub))}</time>
-          </li>`;
-        })
-        .join('');
+// Category grouping for the index page. Order here = order on the page.
+// "full" categories span the full width (breaking bundles on top).
+const CATEGORIES = [
+  { label: 'Breaking', accent: '#c62828', full: true, filenames: ['rourkela-breaking', 'odisha-breaking', 'ai-breaking', 'webdev-breaking'] },
+  { label: 'Rourkela', accent: '#e86a17', full: false, filenames: ['rourkela', 'rourkela-crime', 'rourkela-accident', 'rourkela-weather', 'rourkela-exams', 'rourkela-govt', 'rourkela-power', 'rourkela-health', 'satya-alert'] },
+  { label: 'Odisha', accent: '#2e7d32', full: false, filenames: ['odisha', 'bhubaneswar-crime', 'odisha-crime', 'odisha-accident', 'odisha-weather', 'odisha-exams', 'odisha-govt', 'odisha-power', 'odisha-health', 'oshb'] },
+  { label: 'Tech and Jobs', accent: '#1565c0', full: false, filenames: ['ai-models', 'ai-safety', 'ai-pricing', 'ai-industry', 'webdev-frontend', 'webdev-backend', 'webdev-devops', 'webdev-security', 'india-jobs', 'global-remote-jobs'] },
+  { label: 'India and World', accent: '#6a1b9a', full: false, filenames: ['india-breaking', 'world-breaking', 'bengaluru-power'] },
+];
 
+/** One feed card: title, description, top headlines. */
+function renderFeedCard(result) {
+  const feed = result.feed;
+  const shown = result.items.slice(0, INDEX_HEADLINES_PER_FEED);
+  const rows = shown
+    .map((item) => {
+      const pub = item.pubDate || item.isoDate || '';
+      const publisher = publisherOf(item);
+      const meta = [publisher, `${shortDate(pub)}${ageLabel(pub)}`].filter(Boolean).join(' | ');
       return `
-      <section>
-        <h2>
-          <a href="${escapeText(result.feed.filename)}.xml">${escapeText(result.feed.title)}</a>
-          <small>top ${shown.length} of ${result.items.length} unique</small>
-        </h2>
-        <p>${escapeText(result.feed.description)}</p>
-        <ul>${rows}
-        </ul>
-      </section>`;
+          <li>
+            <a class="headline" href="${escapeText(item.link)}">${escapeText(item.title)}</a>
+            ${meta ? `<span class="meta">${escapeText(meta)}</span>` : ''}
+          </li>`;
     })
-    .join('\n');
+    .join('');
 
+  return `
+        <section class="feed">
+          <h3>
+            <a href="${escapeText(feed.filename)}.xml">${escapeText(feed.title)}</a>
+            <span class="count">top ${shown.length} of ${result.items.length} unique</span>
+          </h3>
+          <p class="desc">${escapeText(feed.description)}</p>
+          <ul>${rows}
+          </ul>
+        </section>`;
+}
+
+/** One category block: header plus a grid of feed cards. Empty feeds are hidden. */
+function renderCategory(cat, results) {
+  const nonEmpty = results.filter((r) => r.items.length > 0);
+  if (nonEmpty.length === 0) return '';
+  const cards = nonEmpty.map(renderFeedCard).join('\n');
+  return `
+      <section class="category" style="--cat:${cat.accent}">
+        <h2>${escapeText(cat.label)}</h2>
+        <div class="grid${cat.full ? ' full' : ''}">${cards}
+        </div>
+      </section>`;
+}
+
+/** Builds the readable index page: masthead, grouped categories, feed cards. */
+function buildIndexHtml(results) {
+  const byFilename = {};
+  for (const result of results) byFilename[result.feed.filename] = result;
+
+  const sections = [];
+  for (const cat of CATEGORIES) {
+    const catResults = cat.filenames.map((f) => byFilename[f]).filter(Boolean);
+    if (catResults.length > 0) {
+      const html = renderCategory(cat, catResults);
+      if (html) sections.push(html);
+    }
+  }
+  // Safety net: any feed not listed above still appears.
+  const known = new Set(CATEGORIES.flatMap((c) => c.filenames));
+  const leftovers = results.filter((r) => !known.has(r.feed.filename));
+  if (leftovers.length > 0) {
+    const html = renderCategory({ label: 'More', accent: '#607d8b', full: false }, leftovers);
+    if (html) sections.push(html);
+  }
+
+  const updated = new Date().toUTCString();
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -366,44 +418,94 @@ function buildIndexHtml(results) {
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23e86a17'/><circle cx='10' cy='22' r='3' fill='white'/><path d='M6 14a10 10 0 0 1 10 10' stroke='white' stroke-width='3' fill='none' stroke-linecap='round'/><path d='M6 7a17 17 0 0 1 17 17' stroke='white' stroke-width='3' fill='none' stroke-linecap='round'/></svg>">
   <title>Rourkela Odisha Deduped Feeds</title>
   <style>
+    :root {
+      --bg: #fafafa;
+      --fg: #1a1a1a;
+      --muted: #6b7280;
+      --card: #ffffff;
+      --border: #e5e7eb;
+      --accent: #e86a17;
+      --font-head: Georgia, 'Times New Roman', serif;
+      --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #101418;
+        --fg: #e7e9ec;
+        --muted: #9aa3ad;
+        --card: #171c22;
+        --border: #262d35;
+      }
+    }
+    * { box-sizing: border-box; }
     body {
-      font-family: system-ui, -apple-system, sans-serif;
-      max-width: 46rem;
-      margin: 0 auto;
-      padding: 2rem 1.25rem 4rem;
+      margin: 0;
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--fg);
       line-height: 1.5;
-      color: #1a1a1a;
-      background: #fafafa;
     }
-    h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
-    .updated { color: #777; margin-top: 0; }
-    .opml { color: #777; font-size: 0.9rem; margin-top: 0.25rem; }
-    .opml a { color: inherit; }
-    section { margin-top: 2.5rem; }
-    h2 { font-size: 1.15rem; margin-bottom: 0.25rem; }
-    h2 a { color: inherit; text-decoration: none; }
-    h2 a:hover { text-decoration: underline; }
-    h2 small { font-weight: normal; color: #777; margin-left: 0.5rem; }
-    section > p { color: #555; margin-top: 0; }
-    ul { list-style: none; padding: 0; margin: 1rem 0 0; }
-    li {
+    .wrap { max-width: 74rem; margin: 0 auto; padding: 0 1.25rem 4rem; }
+    .masthead { padding: 2rem 0 1.25rem; border-bottom: 1px solid var(--border); }
+    .brand { font-family: var(--font-head); font-size: 1.9rem; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+    .tagline { color: var(--muted); margin: 0.25rem 0 0; }
+    .mast-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; margin-top: 0.9rem; }
+    .updated { color: var(--muted); font-size: 0.9rem; }
+    .subscribe {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      padding: 0.45rem 0.95rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .category { margin-top: 2.25rem; }
+    .category h2 {
       display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      padding: 0.5rem 0;
-      border-bottom: 1px solid #e5e5e5;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin: 0 0 0.75rem;
     }
-    li a { color: #1a1a1a; }
-    time { color: #777; white-space: nowrap; font-size: 0.9rem; }
+    .category h2::before { content: ''; width: 5px; height: 1.05em; background: var(--cat); border-radius: 2px; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+    @media (min-width: 900px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+      .grid.full { grid-template-columns: 1fr; }
+    }
+    .feed { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; }
+    .feed h3 { margin: 0 0 0.15rem; font-size: 1.05rem; }
+    .feed h3 a { color: var(--fg); text-decoration: none; }
+    .feed h3 a:hover { text-decoration: underline; }
+    .feed .count { color: var(--muted); font-size: 0.8rem; font-weight: normal; margin-left: 0.4rem; }
+    .feed .desc { color: var(--muted); font-size: 0.85rem; margin: 0 0 0.6rem; }
+    .feed ul { list-style: none; margin: 0; padding: 0; }
+    .feed li { padding: 0.5rem 0; border-top: 1px solid var(--border); }
+    .feed li:first-child { border-top: 0; }
+    .feed li a.headline { color: var(--fg); text-decoration: none; font-family: var(--font-head); font-size: 0.98rem; line-height: 1.35; }
+    .feed li a.headline:hover { text-decoration: underline; }
+    .feed .meta { display: block; color: var(--muted); font-size: 0.78rem; margin-top: 0.15rem; }
+    footer { margin-top: 3rem; color: var(--muted); font-size: 0.85rem; text-align: center; }
   </style>
 </head>
 <body>
-  <main>
-    <h1>Deduped news feeds</h1>
-    <p class="updated">Same story, many publishers - one headline. Updated ${escapeText(new Date().toUTCString())}.</p>
-    <p class="opml">Subscribe to every feed at once: <a href="feeds.opml">feeds.opml</a> (import into any RSS reader)</p>
-    ${sections}
-  </main>
+  <div class="wrap">
+    <header class="masthead">
+      <h1 class="brand">Deduped News</h1>
+      <p class="tagline">Same story, many publishers - one headline.</p>
+      <div class="mast-row">
+        <span class="updated">Updated ${escapeText(updated)}</span>
+        <a class="subscribe" href="feeds.opml">Subscribe to all feeds</a>
+      </div>
+    </header>
+    ${sections.join('\n')}
+    <footer>Generated by feeds-dedup. Personal project, view-only.</footer>
+  </div>
 </body>
 </html>`;
 }
@@ -622,6 +724,7 @@ module.exports = {
   escapeText,
   shortDate,
   ageLabel,
+  publisherOf,
   buildRssXml,
   buildFeedUrl,
   buildBundleItems,

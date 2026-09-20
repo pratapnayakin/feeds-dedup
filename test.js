@@ -15,6 +15,7 @@ const {
   filterByTitle,
   escapeText,
   ageLabel,
+  publisherOf,
   buildRssXml,
   buildFeedUrl,
   buildBundleItems,
@@ -189,6 +190,19 @@ const {
   assert.strictEqual(ageLabel(''), '', 'dateless items get no badge');
   const old = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toUTCString();
   assert(ageLabel(old).includes('old'), '10-day-old items get an old badge');
+}
+
+// --- publisherOf ----------------------------------------------------------
+// Google News titles carry " - Publisher"; custom feeds do not.
+{
+  const gn = { link: 'https://news.google.com/rss/articles/x', title: 'Rourkela power cut - The New Indian Express' };
+  assert.strictEqual(publisherOf(gn), 'The New Indian Express', 'extracts publisher from Google News title');
+
+  const custom = { link: 'https://satyanewsalert.in/?p=1', title: 'Odia headline without suffix' };
+  assert.strictEqual(publisherOf(custom), '', 'no publisher for custom feeds');
+
+  const noSuffix = { link: 'https://news.google.com/rss/articles/x', title: 'Plain headline without suffix' };
+  assert.strictEqual(publisherOf(noSuffix), '', 'no publisher when suffix missing');
 }
 
 // --- buildRssXml pubDate fallback ----------------------------------------
