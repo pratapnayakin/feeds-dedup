@@ -307,6 +307,17 @@ function publisherOf(item) {
   return m ? m[1].trim() : '';
 }
 
+/**
+ * Headline for the web page: strips the trailing " - Publisher" suffix that
+ * Google News appends, since the source is shown in the meta line instead.
+ * RSS XML keeps the full title; this is display-only.
+ */
+function displayTitle(item) {
+  const title = String(item.title || '');
+  if (!isGoogleNewsUrl(item.link)) return title;
+  return title.replace(/\s*-\s*[^-]+$/, '');
+}
+
 /** Builds one RSS 2.0 channel from a feed config and its unique items. */
 function buildRssXml(feed, items) {
   // Self link for validators and readers. Base feeds carry filename,
@@ -362,7 +373,7 @@ function renderFeedCard(result, big) {
       const meta = [publisher, relativeTime(pub)].filter(Boolean).join(' | ');
       return `
           <li>
-            <a class="headline" href="${escapeText(item.link)}">${escapeText(item.title)}</a>
+            <a class="headline" href="${escapeText(item.link)}">${escapeText(displayTitle(item))}</a>
             ${meta ? `<span class="meta">${escapeText(meta)}</span>` : ''}
           </li>`;
     })
@@ -415,7 +426,7 @@ function renderHero(items) {
       const meta = [publisher, relativeTime(pub)].filter(Boolean).join(' | ');
       return `
           <li>
-            <a class="hero-headline" href="${escapeText(item.link)}">${escapeText(item.title)}</a>
+            <a class="hero-headline" href="${escapeText(item.link)}">${escapeText(displayTitle(item))}</a>
             ${meta ? `<span class="meta">${escapeText(meta)}</span>` : ''}
           </li>`;
     })
@@ -793,6 +804,7 @@ module.exports = {
   shortDate,
   relativeTime,
   publisherOf,
+  displayTitle,
   buildRssXml,
   buildFeedUrl,
   buildBundleItems,

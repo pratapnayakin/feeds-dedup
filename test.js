@@ -16,12 +16,14 @@ const {
   escapeText,
   relativeTime,
   publisherOf,
+  displayTitle,
   buildRssXml,
   buildFeedUrl,
   buildBundleItems,
   isGoogleNewsUrl,
   validateConfig,
 } = require('./dedup.js');
+const { freshItems } = require('./notify.js');
 
 // --- extractTokens -------------------------------------------------------
 // Strips the " - Publisher" tag Google News appends, lowercases, drops
@@ -212,6 +214,19 @@ const {
   assert.strictEqual(publisherOf(noSuffix), '', 'no publisher when suffix missing');
 }
 
+// --- displayTitle ---------------------------------------------------------
+// Web page strips the " - Publisher" suffix; RSS XML keeps the full title.
+{
+  const gn = { link: 'https://news.google.com/rss/articles/x', title: 'Rourkela power cut - The New Indian Express' };
+  assert.strictEqual(displayTitle(gn), 'Rourkela power cut', 'strips publisher suffix for Google News');
+
+  const custom = { link: 'https://satyanewsalert.in/?p=1', title: 'Odia headline without suffix' };
+  assert.strictEqual(displayTitle(custom), 'Odia headline without suffix', 'custom feeds keep full title');
+
+  const middleDash = { link: 'https://news.google.com/rss/articles/x', title: 'Rourkela - Power cut today - The Hindu' };
+  assert.strictEqual(displayTitle(middleDash), 'Rourkela - Power cut today', 'keeps middle dash, strips only last segment');
+}
+
 // --- buildRssXml pubDate fallback ----------------------------------------
 // Missing pubDate falls back to isoDate, then to now. Never empty.
 {
@@ -261,6 +276,17 @@ const {
     () => validateConfig([{ filename: 'a', keywords: ['x'] }], [{ filename: 'b', sources: ['a'] }]),
     'accepts valid config'
   );
+}
+
+// --- freshItems (notify.js) ----------------------------------------------
+// Returns only items whose GUID was not seen in the previous run.
+{
+  const seen = new Set(['a', 'b']);
+  const items = [{ guid: 'a' }, { guid: 'c' }, { guid: 'd' }];
+  const fresh = freshItems(items, seen);
+  assert.strictEqual(fresh.length, 2, 'returns only unseen guids');
+  assert.strictEqual(fresh[0].guid, 'c', 'keeps original order');
+  assert.strictEqual(freshItems([], seen).length, 0, 'empty items give empty fresh');
 }
 
 console.log('All tests passed.');
