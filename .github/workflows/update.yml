@@ -43,7 +43,9 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: .notify-state.json
-          key: notify-state-v1
+          key: notify-state-${{ github.run_id }}
+          restore-keys: |
+            notify-state-
 
       - name: Send notifications
         run: node notify.js
@@ -53,7 +55,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: .notify-state.json
-          key: notify-state-v1
+          key: notify-state-${{ github.run_id }}
         continue-on-error: true
 
       - name: Setup Pages
