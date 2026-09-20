@@ -286,12 +286,18 @@ function shortDate(dateString) {
     : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-/** Age badge for index rows, e.g. " (6d old)". Empty when fresh or dateless. */
-function ageLabel(dateString) {
+/** Relative age for index rows, e.g. "2h ago", "5d ago". Empty when dateless. */
+function relativeTime(dateString) {
   const t = new Date(dateString).getTime();
   if (Number.isNaN(t)) return '';
-  const days = Math.floor((Date.now() - t) / 86400000);
-  return days > 3 ? ` (${days}d old)` : '';
+  const mins = Math.floor((Date.now() - t) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return `${Math.floor(days / 30)}mo ago`;
 }
 
 /** Publisher name from a Google News title suffix, e.g. " - The Hindu". */
@@ -345,15 +351,15 @@ const CATEGORIES = [
   { label: 'India and World', accent: '#6a1b9a', full: false, filenames: ['india-breaking', 'world-breaking', 'bengaluru-power'] },
 ];
 
-/** One feed card: title, description, top headlines. */
-function renderFeedCard(result) {
+/** One feed card: title, description, top headlines. "big" enlarges headlines (breaking). */
+function renderFeedCard(result, big) {
   const feed = result.feed;
   const shown = result.items.slice(0, INDEX_HEADLINES_PER_FEED);
   const rows = shown
     .map((item) => {
       const pub = item.pubDate || item.isoDate || '';
       const publisher = publisherOf(item);
-      const meta = [publisher, `${shortDate(pub)}${ageLabel(pub)}`].filter(Boolean).join(' | ');
+      const meta = [publisher, relativeTime(pub)].filter(Boolean).join(' | ');
       return `
           <li>
             <a class="headline" href="${escapeText(item.link)}">${escapeText(item.title)}</a>
@@ -363,7 +369,7 @@ function renderFeedCard(result) {
     .join('');
 
   return `
-        <section class="feed">
+        <section class="feed${big ? ' big' : ''}">
           <h3>
             <a href="${escapeText(feed.filename)}.xml">${escapeText(feed.title)}</a>
             <span class="count">top ${shown.length} of ${result.items.length} unique</span>
@@ -378,12 +384,47 @@ function renderFeedCard(result) {
 function renderCategory(cat, results) {
   const nonEmpty = results.filter((r) => r.items.length > 0);
   if (nonEmpty.length === 0) return '';
-  const cards = nonEmpty.map(renderFeedCard).join('\n');
+  const cards = nonEmpty.map((r) => renderFeedCard(r, cat.full)).join('\n');
   return `
       <section class="category" style="--cat:${cat.accent}">
         <h2>${escapeText(cat.label)}</h2>
         <div class="grid${cat.full ? ' full' : ''}">${cards}
         </div>
+      </section>`;
+}
+
+/** Top stories for the lead strip, drawn from the breaking bundles, newest first. */
+function buildHero(results, byFilename) {
+  const names = ['rourkela-breaking', 'odisha-breaking', 'ai-breaking', 'webdev-breaking'];
+  const items = [];
+  for (const name of names) {
+    const r = byFilename[name];
+    if (r) items.push(...r.items.slice(0, 3));
+  }
+  items.sort((a, b) => dateValue(b) - dateValue(a));
+  return items.slice(0, 5);
+}
+
+/** Lead story strip under the masthead. */
+function renderHero(items) {
+  if (items.length === 0) return '';
+  const rows = items
+    .map((item) => {
+      const pub = item.pubDate || item.isoDate || '';
+      const publisher = publisherOf(item);
+      const meta = [publisher, relativeTime(pub)].filter(Boolean).join(' | ');
+      return `
+          <li>
+            <a class="hero-headline" href="${escapeText(item.link)}">${escapeText(item.title)}</a>
+            ${meta ? `<span class="meta">${escapeText(meta)}</span>` : ''}
+          </li>`;
+    })
+    .join('');
+  return `
+      <section class="hero">
+        <h2 class="hero-label">Top Stories</h2>
+        <ol class="hero-list">${rows}
+        </ol>
       </section>`;
 }
 
@@ -409,6 +450,7 @@ function buildIndexHtml(results) {
   }
 
   const updated = new Date().toUTCString();
+  const hero = renderHero(buildHero(results, byFilename));
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -461,6 +503,30 @@ function buildIndexHtml(results) {
       font-size: 0.9rem;
       font-weight: 600;
     }
+    .hero { margin-top: 1.5rem; }
+    .hero-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin: 0 0 0.5rem;
+    }
+    .hero-label::before { content: ''; width: 5px; height: 1.05em; background: var(--accent); border-radius: 2px; }
+    .hero-list { list-style: none; margin: 0; padding: 0; }
+    .hero-list li { padding: 0.8rem 0; border-bottom: 1px solid var(--border); }
+    .hero-list li:first-child { padding-top: 0.25rem; }
+    .hero-list a.hero-headline {
+      font-family: var(--font-head);
+      font-size: 1.35rem;
+      line-height: 1.3;
+      color: var(--fg);
+      text-decoration: none;
+      display: block;
+    }
+    .hero-list a.hero-headline:hover { text-decoration: underline; }
     .category { margin-top: 2.25rem; }
     .category h2 {
       display: flex;
@@ -489,6 +555,7 @@ function buildIndexHtml(results) {
     .feed li:first-child { border-top: 0; }
     .feed li a.headline { color: var(--fg); text-decoration: none; font-family: var(--font-head); font-size: 0.98rem; line-height: 1.35; }
     .feed li a.headline:hover { text-decoration: underline; }
+    .feed.big li a.headline { font-size: 1.12rem; }
     .feed .meta { display: block; color: var(--muted); font-size: 0.78rem; margin-top: 0.15rem; }
     footer { margin-top: 3rem; color: var(--muted); font-size: 0.85rem; text-align: center; }
   </style>
@@ -503,6 +570,7 @@ function buildIndexHtml(results) {
         <a class="subscribe" href="feeds.opml">Subscribe to all feeds</a>
       </div>
     </header>
+    ${hero}
     ${sections.join('\n')}
     <footer>Generated by feeds-dedup. Personal project, view-only.</footer>
   </div>
@@ -723,7 +791,7 @@ module.exports = {
   filterByTitle,
   escapeText,
   shortDate,
-  ageLabel,
+  relativeTime,
   publisherOf,
   buildRssXml,
   buildFeedUrl,

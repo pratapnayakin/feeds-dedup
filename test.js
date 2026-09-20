@@ -14,7 +14,7 @@ const {
   filterByAge,
   filterByTitle,
   escapeText,
-  ageLabel,
+  relativeTime,
   publisherOf,
   buildRssXml,
   buildFeedUrl,
@@ -183,13 +183,20 @@ const {
   assert.strictEqual(escapeText(null), '', 'handles missing text');
 }
 
-// --- ageLabel ------------------------------------------------------------
-// Flags items older than 3 days so resurfaced old stories read as old.
+// --- relativeTime ---------------------------------------------------------
+// Shows age on every item: "just now", "2h ago", "5d ago". Dateless is empty.
 {
-  assert.strictEqual(ageLabel(new Date().toUTCString()), '', 'fresh items get no badge');
-  assert.strictEqual(ageLabel(''), '', 'dateless items get no badge');
-  const old = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toUTCString();
-  assert(ageLabel(old).includes('old'), '10-day-old items get an old badge');
+  assert.strictEqual(relativeTime(new Date().toUTCString()), 'just now', 'fresh items say just now');
+  assert.strictEqual(relativeTime(''), '', 'dateless items get no time');
+
+  const twoHours = new Date(Date.now() - 2 * 60 * 60 * 1000).toUTCString();
+  assert.strictEqual(relativeTime(twoHours), '2h ago', 'hours format');
+
+  const fiveDays = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toUTCString();
+  assert.strictEqual(relativeTime(fiveDays), '5d ago', 'days format');
+
+  const twoMonths = new Date(Date.now() - 61 * 24 * 60 * 60 * 1000).toUTCString();
+  assert.strictEqual(relativeTime(twoMonths), '2mo ago', 'months format');
 }
 
 // --- publisherOf ----------------------------------------------------------
