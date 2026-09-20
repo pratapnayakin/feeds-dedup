@@ -5,27 +5,28 @@
       "title": "Rourkela News",
       "description": "Clean local updates for Rourkela",
       "maxAgeDays": 30,
-      "keywords": ["Rourkela", "Raurkela"]
+      "keywords": ["Rourkela", "Raurkela"],
+      "exclude": ["gold rate", "gold price", "on road price", "BikeWale", "ZigWheels", "Baleno"]
     },
     {
       "filename": "rourkela-crime",
       "title": "Rourkela Crime",
       "description": "Crime and police news from Rourkela and Sundargarh",
-      "maxAgeDays": 30,
+      "maxAgeDays": 14,
       "url": "https://news.google.com/rss/search?q=%28%22Rourkela%22%20OR%20%22Raurkela%22%20OR%20%22Sundargarh%22%29%20%28crime%20OR%20arrest%20OR%20murder%20OR%20theft%20OR%20robbery%20OR%20smuggling%29&hl=en-IN&gl=IN&ceid=IN:en"
     },
     {
       "filename": "rourkela-accident",
       "title": "Rourkela Accidents",
       "description": "Accident and road news from Rourkela and Sundargarh",
-      "maxAgeDays": 30,
+      "maxAgeDays": 14,
       "url": "https://news.google.com/rss/search?q=%28%22Rourkela%22%20OR%20%22Raurkela%22%20OR%20%22Sundargarh%22%29%20%28accident%20OR%20crash%20OR%20mishap%20OR%20%22killed%22%20OR%20dead%29&hl=en-IN&gl=IN&ceid=IN:en"
     },
     {
       "filename": "rourkela-weather",
       "title": "Rourkela Weather",
       "description": "Cyclone, rainfall and IMD alerts for Rourkela and Sundargarh",
-      "maxAgeDays": 30,
+      "maxAgeDays": 7,
       "url": "https://news.google.com/rss/search?q=%28%22Rourkela%22%20OR%20%22Raurkela%22%20OR%20%22Sundargarh%22%29%20%28cyclone%20OR%20%22low%20pressure%22%20OR%20%22heavy%20rainfall%22%20OR%20IMD%20OR%20flood%29&hl=en-IN&gl=IN&ceid=IN:en"
     },
     {
@@ -46,14 +47,14 @@
       "filename": "rourkela-power",
       "title": "Rourkela Power Cuts",
       "description": "Power cuts and outages in Rourkela and Sundargarh",
-      "maxAgeDays": 30,
+      "maxAgeDays": 7,
       "url": "https://news.google.com/rss/search?q=%28%22Rourkela%22%20OR%20%22Raurkela%22%20OR%20%22Sundargarh%22%29%20%28%22power%20cut%22%20OR%20%22power%20outage%22%20OR%20%22power%20shutdown%22%20OR%20%22electricity%20outage%22%29&hl=en-IN&gl=IN&ceid=IN:en"
     },
     {
       "filename": "rourkela-health",
       "title": "Rourkela Health",
       "description": "Hospitals, outbreaks and health department news from Rourkela",
-      "maxAgeDays": 30,
+      "maxAgeDays": 14,
       "url": "https://news.google.com/rss/search?q=%28%22Rourkela%22%20OR%20%22Raurkela%22%20OR%20%22Sundargarh%22%29%20%28hospital%20OR%20dengue%20OR%20%22health%20department%22%20OR%20outbreak%29&hl=en-IN&gl=IN&ceid=IN:en"
     },
     {
@@ -67,15 +68,16 @@
     {
       "filename": "odisha",
       "title": "Odisha Headlines",
-      "description": "Top stories from Bhubaneswar, Cuttack and the Berhampur region, deduplicated",
+      "description": "Top Odisha stories from across the state, deduplicated",
       "maxAgeDays": 7,
-      "keywords": ["Bhubaneswar", "Cuttack", "Kataka", "Bhanjanagar", "Berhampur", "Brahmapur"]
+      "keywords": ["Odisha", "Bhubaneswar", "Cuttack", "Kataka", "Bhanjanagar", "Berhampur", "Brahmapur", "Sambalpur", "Rourkela", "Puri", "Balasore", "ଓଡିଶା"],
+      "exclude": ["gold rate", "gold price", "on road price", "BikeWale", "ZigWheels"]
     },
     {
       "filename": "bhubaneswar-crime",
       "title": "Bhubaneswar Accidents and Crime",
       "description": "Accidents, crime and police news from Bhubaneswar",
-      "maxAgeDays": 30,
+      "maxAgeDays": 14,
       "url": "https://news.google.com/rss/search?q=%28%22Bhubaneswar%22%20OR%20%22Bhubaneshwar%22%29%20%28accident%20OR%20crash%20OR%20crime%20OR%20arrest%20OR%20murder%20OR%20robbery%20OR%20theft%29&hl=en-IN&gl=IN&ceid=IN:en"
     },
     {
@@ -117,21 +119,22 @@
       "filename": "odisha-power",
       "title": "Odisha Power Cuts",
       "description": "Power cuts and outages in Odisha",
-      "maxAgeDays": 30,
+      "maxAgeDays": 14,
       "url": "https://news.google.com/rss/search?q=%28%22Odisha%22%20OR%20%22Bhubaneswar%22%20OR%20%22Cuttack%22%29%20%28%22power%20cut%22%20OR%20%22power%20outage%22%20OR%20%22power%20shutdown%22%20OR%20%22electricity%20outage%22%29&hl=en-IN&gl=IN&ceid=IN:en"
     },
     {
       "filename": "odisha-health",
       "title": "Odisha Health",
       "description": "Hospitals, outbreaks and health department news from Odisha",
-      "maxAgeDays": 30,
+      "maxAgeDays": 14,
       "url": "https://news.google.com/rss/search?q=%28%22Odisha%22%20OR%20%22Bhubaneswar%22%20OR%20%22Cuttack%22%29%20%28hospital%20OR%20dengue%20OR%20%22health%20department%22%20OR%20outbreak%29&hl=en-IN&gl=IN&ceid=IN:en"
     },
     {
       "filename": "oshb",
       "title": "OSHB News",
       "description": "Odisha State Housing Board updates",
-      "keywords": ["Odisha State Housing Board", "OSHB"]
+      "maxAgeDays": 30,
+      "url": "https://news.google.com/rss/search?q=%28%22Odisha%20State%20Housing%20Board%22%20OR%20%28OSHB%20AND%20Odisha%29%29&hl=en-IN&gl=IN&ceid=IN:en"
     },
     {
       "filename": "bengaluru-power",
@@ -159,7 +162,7 @@
       "title": "AI Pricing",
       "description": "API cost, inference cost and price changes",
       "maxAgeDays": 60,
-      "url": "https://news.google.com/rss/search?q=%28LLM%20OR%20OpenAI%20OR%20Anthropic%20OR%20%22Google%20Gemini%22%20OR%20%22Claude%20AI%22%20OR%20%22Generative%20AI%22%29%20%28pricing%20OR%20%22API%20cost%22%20OR%20%22inference%20cost%22%20OR%20%22price%20cut%22%29&hl=en-US&gl=US&ceid=US:en"
+      "url": "https://news.google.com/rss/search?q=%28LLM%20OR%20OpenAI%20OR%20Anthropic%20OR%20%22Google%20Gemini%22%20OR%20%22Claude%20AI%22%20OR%20%22Generative%20AI%22%29%20%28pricing%20OR%20%22API%20cost%22%20OR%20%22inference%20cost%22%20OR%20%22price%20cut%22%29%20-university%20-degree%20-movie%20-cryptocurrency%20-admission&hl=en-US&gl=US&ceid=US:en"
     },
     {
       "filename": "ai-industry",
@@ -173,7 +176,7 @@
       "title": "WebDev Frontend",
       "description": "Next.js, React, Tailwind, CSS and web performance",
       "maxAgeDays": 60,
-      "url": "https://news.google.com/rss/search?q=%28Next.js%20OR%20%22React%20Server%20Components%22%20OR%20%22Core%20Web%20Vitals%22%20OR%20Tailwind%20OR%20CSS%20OR%20%22web%20performance%22%20OR%20%28React%20AND%20%28JavaScript%20OR%20frontend%20OR%20framework%20OR%20component%20OR%20library%20OR%20npm%20OR%20%22open%20source%22%29%29%29%20-football%20-cricket%20-movie%20-%22React%20Native%22&hl=en-IN&gl=IN&ceid=IN:en"
+      "url": "https://news.google.com/rss/search?q=%28Next.js%20OR%20%22React%20Server%20Components%22%20OR%20%22Core%20Web%20Vitals%22%20OR%20Tailwind%20OR%20CSS%20OR%20%22web%20performance%22%20OR%20%28React%20AND%20%28JavaScript%20OR%20frontend%20OR%20framework%20OR%20component%20OR%20library%20OR%20npm%20OR%20%22open%20source%22%29%29%29%20-football%20-cricket%20-movie%20-%22React%20Native%22%20-%22Counter-Strike%22%20-UPSC&hl=en-IN&gl=IN&ceid=IN:en"
     },
     {
       "filename": "webdev-backend",
@@ -201,14 +204,14 @@
       "title": "India IT Jobs",
       "description": "Hiring, off-campus drives and layoffs at IT companies",
       "maxAgeDays": 30,
-      "url": "https://news.google.com/rss/search?q=%28TCS%20OR%20Infosys%20OR%20Wipro%20OR%20HCL%20OR%20Accenture%20OR%20Cognizant%20OR%20Capgemini%29%20%28hiring%20OR%20recruitment%20OR%20vacancy%20OR%20%22off%20campus%22%20OR%20%22walk-in%22%20OR%20layoffs%29&hl=en-IN&gl=IN&ceid=IN:en"
+      "url": "https://news.google.com/rss/search?q=%28TCS%20OR%20Infosys%20OR%20Wipro%20OR%20HCL%20OR%20Accenture%20OR%20Cognizant%20OR%20Capgemini%29%20%28hiring%20OR%20recruitment%20OR%20vacancy%20OR%20%22off%20campus%22%20OR%20%22walk-in%22%20OR%20layoffs%29%20-movie%20-cricket%20-football&hl=en-IN&gl=IN&ceid=IN:en"
     },
     {
       "filename": "global-remote-jobs",
       "title": "Global and Remote Jobs",
       "description": "Visa sponsorship, work visas, H-1B and remote hiring",
       "maxAgeDays": 30,
-      "url": "https://news.google.com/rss/search?q=%28%22visa%20sponsorship%22%20OR%20%22work%20visa%22%20OR%20%22H-1B%22%20OR%20%22remote%20job%22%20OR%20%22remote%20hiring%22%20OR%20%22work%20from%20home%22%29%20%28developer%20OR%20engineer%20OR%20%22tech%20worker%22%20OR%20IT%20OR%20Indian%29&hl=en-US&gl=US&ceid=US:en"
+      "url": "https://news.google.com/rss/search?q=%28%22visa%20sponsorship%22%20OR%20%22work%20visa%22%20OR%20%22H-1B%22%20OR%20%22remote%20job%22%20OR%20%22remote%20hiring%22%20OR%20%22work%20from%20home%22%29%20%28developer%20OR%20engineer%20OR%20%22tech%20worker%22%20OR%20IT%20OR%20Indian%29%20-movie%20-cricket&hl=en-US&gl=US&ceid=US:en"
     },
     {
       "filename": "india-breaking",

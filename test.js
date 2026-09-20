@@ -14,6 +14,7 @@ const {
   filterByAge,
   filterByTitle,
   escapeText,
+  ageLabel,
   buildRssXml,
   buildFeedUrl,
   buildBundleItems,
@@ -107,6 +108,12 @@ const {
   const urlEx = buildFeedUrl({ keywords: ['TypeScript'], exclude: ['football', 'cricket'] });
   assert(urlEx.includes('-football') && urlEx.includes('-cricket'), 'appends exclude terms');
 
+  // multi-word excludes are quoted: -"gold rate", not -gold rate
+  const urlPhrase = buildFeedUrl({ keywords: ['Rourkela'], exclude: ['gold rate', 'BikeWale'] });
+  assert(urlPhrase.includes('-BikeWale'), 'appends single-word exclude');
+  const qPhrase = new URL(urlPhrase).searchParams.get('q');
+  assert(qPhrase.includes('-"gold rate"'), 'quotes phrase exclude');
+
   // an explicit url always wins
   const urlRaw = buildFeedUrl({ keywords: ['ignored'], url: 'https://example.com/rss' });
   assert.strictEqual(urlRaw, 'https://example.com/rss', 'explicit url wins over keywords');
@@ -175,6 +182,15 @@ const {
   assert.strictEqual(escapeText(null), '', 'handles missing text');
 }
 
+// --- ageLabel ------------------------------------------------------------
+// Flags items older than 3 days so resurfaced old stories read as old.
+{
+  assert.strictEqual(ageLabel(new Date().toUTCString()), '', 'fresh items get no badge');
+  assert.strictEqual(ageLabel(''), '', 'dateless items get no badge');
+  const old = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toUTCString();
+  assert(ageLabel(old).includes('old'), '10-day-old items get an old badge');
+}
+
 // --- buildRssXml pubDate fallback ----------------------------------------
 // Missing pubDate falls back to isoDate, then to now. Never empty.
 {
@@ -187,6 +203,10 @@ const {
   const withNone = buildRssXml(feed, [{ title: 'B', link: 'https://example.com/b' }]);
   assert(!withNone.includes('<pubDate></pubDate>'), 'never writes empty pubDate');
   assert(withNone.includes('<pubDate>'), 'always writes pubDate tag');
+
+  const withName = buildRssXml({ filename: 'rourkela', title: 'T', description: 'D' }, []);
+  assert(withName.includes('xmlns:atom'), 'declares atom namespace');
+  assert(withName.includes('rel="self"'), 'includes self link for validators');
 }
 
 // --- isGoogleNewsUrl + validateConfig ------------------------------------

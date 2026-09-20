@@ -80,6 +80,7 @@ const FETCH_RETRIES = 2;
  * Resolves the URL for one feed. An explicit "url" always wins;
  * otherwise the keywords become: "a" OR "b" OR "c" on Google News.
  * An optional "exclude" list appends -term filters (keyword feeds only).
+ * Multi-word terms are quoted: -"gold rate", not -gold rate.
  */
 function buildFeedUrl(feed) {
   if (feed.url) return feed.url;
@@ -88,7 +89,11 @@ function buildFeedUrl(feed) {
   }
   let query = feed.keywords.map((keyword) => `"${keyword}"`).join(' OR ');
   if (Array.isArray(feed.exclude) && feed.exclude.length > 0) {
-    query += ' ' + feed.exclude.map((term) => `-${term}`).join(' ');
+    const parts = feed.exclude.map((term) => {
+      const t = String(term || '').trim();
+      return t.includes(' ') ? `-"${t}"` : `-${t}`;
+    });
+    query += ' ' + parts.join(' ');
   }
   const params = new URLSearchParams({ q: query, ...GOOGLE_NEWS_LOCALE });
   return `${GOOGLE_NEWS_SEARCH}?${params}`;
@@ -281,8 +286,19 @@ function shortDate(dateString) {
     : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+/** Age badge for index rows, e.g. " (6d old)". Empty when fresh or dateless. */
+function ageLabel(dateString) {
+  const t = new Date(dateString).getTime();
+  if (Number.isNaN(t)) return '';
+  const days = Math.floor((Date.now() - t) / 86400000);
+  return days > 3 ? ` (${days}d old)` : '';
+}
+
 /** Builds one RSS 2.0 channel from a feed config and its unique items. */
 function buildRssXml(feed, items) {
+  // Self link for validators and readers. Base feeds carry filename,
+  // bundles are passed with filename too, so prefer SITE_URL + filename.
+  const selfUrl = feed.filename ? `${SITE_URL}/${feed.filename}.xml` : (feed.link || SITE_URL + '/');
   const itemsXml = items
     .map((item) => {
       // Fallback chain: pubDate -> isoDate -> now. Avoids empty pubDate
@@ -300,10 +316,11 @@ function buildRssXml(feed, items) {
     .join('');
 
   return `<?xml version="1.0" encoding="UTF-8" ?>
-<rss version="2.0">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>${escapeText(feed.title)}</title>
     <link>${escapeText(feed.link || 'https://news.google.com')}</link>
+    <atom:link href="${escapeText(selfUrl)}" rel="self" type="application/rss+xml" />
     <description>${escapeText(feed.description)}</description>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     ${itemsXml}
@@ -322,7 +339,7 @@ function buildIndexHtml(results) {
           return `
           <li>
             <a href="${escapeText(item.link)}">${escapeText(item.title)}</a>
-            <time>${escapeText(shortDate(pub))}</time>
+            <time>${escapeText(shortDate(pub))}${escapeText(ageLabel(pub))}</time>
           </li>`;
         })
         .join('');
@@ -345,7 +362,9 @@ function buildIndexHtml(results) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Deduped feeds</title>
+  <meta name="description" content="Deduped RSS feeds for Rourkela, Odisha, AI and web dev. Same story, many publishers, one headline.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23e86a17'/><circle cx='10' cy='22' r='3' fill='white'/><path d='M6 14a10 10 0 0 1 10 10' stroke='white' stroke-width='3' fill='none' stroke-linecap='round'/><path d='M6 7a17 17 0 0 1 17 17' stroke='white' stroke-width='3' fill='none' stroke-linecap='round'/></svg>">
+  <title>Rourkela Odisha Deduped Feeds</title>
   <style>
     body {
       font-family: system-ui, -apple-system, sans-serif;
@@ -601,6 +620,8 @@ module.exports = {
   filterByAge,
   filterByTitle,
   escapeText,
+  shortDate,
+  ageLabel,
   buildRssXml,
   buildFeedUrl,
   buildBundleItems,

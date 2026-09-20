@@ -5,7 +5,7 @@
 A self-updating, deduplicated RSS feed service. It fetches news from Google
 News search feeds, removes near-duplicate headlines (the same story reported
 by many publishers), and publishes one clean RSS 2.0 feed per topic plus a
-readable index page - all hosted free on GitHub Pages, refreshed every hour.
+readable index page - all hosted free on GitHub Pages, refreshed every 30 minutes.
 
 No servers, no API keys, no cost.
 
@@ -19,9 +19,9 @@ Google News reports the same story many times - once per publisher. Follow a
 topic and you see the same story from five different newspapers. RSS readers
 are the cleanest way to follow news, but they need a feed URL. This project
 creates those URLs automatically, keeps them duplicate-free, and refreshes
-them hourly - so you never have to search Google News again.
+them every 30 minutes - so you never have to search Google News again.
 
-The 30-second pitch: "A script runs every hour on GitHub for free. It reads
+The 30-second pitch: "A script runs every 30 minutes on GitHub for free. It reads
 a list of topics I care about, fetches the latest news from Google, removes
 duplicate stories, and publishes clean RSS feeds to a free website. I
 subscribe to those feeds in my RSS reader. Adding a topic is just editing a
@@ -53,14 +53,14 @@ Why these building blocks:
 
 Paste any `.xml` URL into an RSS reader (Feedly, Inoreader, NetNewsWire, ...).
 The reader polls it on its normal refresh cycle; the content behind it is
-regenerated hourly.
+regenerated every 30 minutes.
 
 ---
 
 ## How it works (architecture)
 
 ```
-GitHub Actions (hourly cron, or on every push, or manual)
+GitHub Actions (30-minute cron, or on every push, or manual)
         |
         v
    node dedup.js
@@ -70,7 +70,7 @@ GitHub Actions (hourly cron, or on every push, or manual)
         |-- 3. dedupes the headlines (word-overlap scoring, per feed)
         |-- 4. writes public/<filename>.xml  (clean RSS 2.0)
         |-- 5. writes public/<bundle>.xml    (merged feeds, cross-deduped)
-        |-- 6. writes public/index.html      (readable index - top 10 headlines per feed)
+        |-- 6. writes public/index.html      (readable index - top 10 per feed, age badge past 3 days)
         |-- 7. writes public/feeds.opml      (one-click subscribe list)
         |
         v
@@ -286,7 +286,7 @@ the stock react" headlines share 44% of their words).
 Triggers:
 
 - **Every push to `main`** - instant feedback that the pipeline works
-- **Hourly** (`cron: 0 * * * *`) - the regular refresh
+- **Every 30 minutes** (`cron: */30 * * * *`) - the regular refresh
 - **Manual** (`workflow_dispatch`) - "Run workflow" button on the Actions page
 
 Steps on each run: checkout -> setup Node 22 -> `npm ci` -> `node dedup.js`
@@ -314,8 +314,8 @@ Read this section honestly - these are the edges of the system.
   of the same big story can still slip through - word overlap between
   same-story headlines ranges from near-zero to high, so no threshold
   separates them perfectly.
-- **Dedup is per feed, not across feeds.** The same story can appear in both
-  the Rourkela feed and the OSHB feed. Each feed is deduped independently.
+- **Base feeds dedupe independently; bundles cross-dedupe.** The same story can appear in both
+  the Rourkela feed and the OSHB feed. Each base feed is deduped on its own; bundles collapse repeats across their sources.
 - **First-seen wins.** Items are processed in the order Google returns them;
   which publisher's headline survives is arbitrary.
 - **Empty-token headlines are never duplicates.** A title with no meaningful
@@ -351,7 +351,7 @@ Read this section honestly - these are the edges of the system.
 ### GitHub Actions quirks
 
 - **Scheduled runs are not exact.** GitHub delays cron runs by minutes during
-  peak load. "Hourly" means "roughly hourly".
+  peak load. "Every 30 minutes" means "roughly every 30 minutes".
 - **Scheduled workflows get disabled after 60 days** of no activity in a
   public repo. Normal commits keep it alive; if it is disabled, re-enable it
   from the Actions tab.
@@ -417,5 +417,5 @@ Read this section honestly - these are the edges of the system.
 - Engine: `dedup.js` (Node, single dependency: `rss-parser`)
 - Config: `feeds.json` (keywords for simple feeds, `url` for complex ones)
 - Subscribe once: import `feeds.opml` into any RSS reader
-- Refresh: hourly + on every push to `main`
+- Refresh: every 30 minutes + on every push to `main`
 - Cost: zero
