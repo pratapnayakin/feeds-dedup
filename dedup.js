@@ -172,9 +172,14 @@ function validateConfig(feeds, bundles) {
  * No "es" rule on purpose: for headline words (outages, issues, cases,
  * releases) the "e" belongs to the stem, so stripping bare "s" is correct.
  * Non-Latin words (Odia) never match these suffixes, so they pass through.
+ * Guard: keeps exceptions intact (news, business) and never returns a
+ * stem shorter than 3 chars (sing stays sing, not s).
  */
+const STEM_EXCEPTIONS = new Set(['news', 'business', 'status', 'this', 'does']);
 function stem(word) {
-  return word.replace(/(ing|ed|s)$/, '');
+  if (STEM_EXCEPTIONS.has(word)) return word;
+  const out = word.replace(/(ing|ed|s)$/, '');
+  return out.length >= 3 ? out : word;
 }
 
 /**
@@ -195,7 +200,8 @@ function extractTokens(title, stripPublisher = true) {
     .replace(/[^\p{L}\p{M}\p{N}\s]/gu, '')
     .split(/\s+/)
     .filter((word) => word.length > 2 && !STOPWORDS.has(word))
-    .map(stem);
+    .map(stem)
+    .filter((word) => word.length > 2);
   return new Set(words);
 }
 

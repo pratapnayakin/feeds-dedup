@@ -172,8 +172,8 @@
       "filename": "webdev-frontend",
       "title": "WebDev Frontend",
       "description": "Next.js, React, Tailwind, CSS and web performance",
-      "maxAgeDays": 30,
-      "url": "https://news.google.com/rss/search?q=%28Next.js%20OR%20React%20OR%20%22React%20Server%20Components%22%20OR%20%22Core%20Web%20Vitals%22%20OR%20Tailwind%20OR%20CSS%20OR%20%22web%20performance%22%29%20-football%20-cricket%20-movie&hl=en-IN&gl=IN&ceid=IN:en"
+      "maxAgeDays": 60,
+      "url": "https://news.google.com/rss/search?q=%28Next.js%20OR%20%22React%20Server%20Components%22%20OR%20%22Core%20Web%20Vitals%22%20OR%20Tailwind%20OR%20CSS%20OR%20%22web%20performance%22%20OR%20%28React%20AND%20%28JavaScript%20OR%20frontend%20OR%20framework%20OR%20component%20OR%20library%20OR%20npm%20OR%20%22open%20source%22%29%29%29%20-football%20-cricket%20-movie%20-%22React%20Native%22&hl=en-IN&gl=IN&ceid=IN:en"
     },
     {
       "filename": "webdev-backend",

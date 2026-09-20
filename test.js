@@ -47,6 +47,12 @@ const {
   const c = extractTokens('Power outages reported in city');
   const d = extractTokens('Power outage reported in city');
   assert(c.has('outage') && d.has('outage'), 'stems plurals (outages -> outage, matches outage)');
+
+  const e = extractTokens('Business news update today');
+  assert(e.has('business') && e.has('news'), 'keeps exceptions intact (business, news)');
+
+  const f = extractTokens('Sing a song in city');
+  assert(f.has('sing'), 'never stems below 3 chars (sing stays sing)');
 }
 
 // --- similarityScore -----------------------------------------------------
