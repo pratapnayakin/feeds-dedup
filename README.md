@@ -213,6 +213,55 @@ automatically. To remove one: delete the entry. The full every-time checklist
 
 ---
 
+## Push notifications (ntfy.sh)
+
+Optional. When a feed has `"notify": true`, new headlines in that feed are
+pushed to your phone through the free ntfy.sh service. Nothing is sent until
+you opt in - the default is off.
+
+### One-time phone setup
+
+1. Install the free ntfy app (Android or iOS).
+2. Tap the plus sign and subscribe to a topic. Topic names are automatic:
+   `feeds-dedup-<filename>`, e.g. `feeds-dedup-rourkela-breaking`.
+3. Repeat for each feed you want notified.
+
+### Turning notifications on for a feed
+
+Add `"notify": true` to that feed's entry in `feeds.json`:
+
+```json
+{
+  "filename": "my-town",
+  "title": "My Town News",
+  "description": "Local updates for my town",
+  "maxAgeDays": 30,
+  "keywords": ["My Town"],
+  "notify": true
+}
+```
+
+- Works for bundles too: add `"notify": true` to a bundle entry.
+- To use a custom topic name instead of the default, add
+  `"topic": "your-own-name"` and subscribe to that name.
+- To stop notifications, delete the `"notify": true` line or set it to
+  `false`. The feed itself stays.
+
+### How it behaves
+
+- The workflow runs `node notify.js` after every feed build (every 30
+  minutes).
+- The first run after enabling records the current items and sends nothing,
+  so you do not get a flood of old headlines.
+- From the second run on, every new headline in an opted-in feed is pushed
+  to your phone within 30 minutes.
+- Notification state is kept in the GitHub Actions cache
+  (`.notify-state.json`), so the script remembers what it already sent.
+- If ntfy.sh is unreachable, the notification step is skipped and the feed
+  site still deploys - a notification outage never breaks the site.
+
+---
+
 ## Adding or removing a feed - the every-time checklist
 
 The git side is automatic after you push; the RSS reader side is always
