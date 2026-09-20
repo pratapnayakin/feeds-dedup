@@ -78,6 +78,7 @@
       "title": "Bhubaneswar Accidents and Crime",
       "description": "Accidents, crime and police news from Bhubaneswar",
       "maxAgeDays": 14,
+      "notify": true,
       "url": "https://news.google.com/rss/search?q=%28%22Bhubaneswar%22%20OR%20%22Bhubaneshwar%22%29%20%28accident%20OR%20crash%20OR%20crime%20OR%20arrest%20OR%20murder%20OR%20robbery%20OR%20theft%29&hl=en-IN&gl=IN&ceid=IN:en"
     },
     {
@@ -99,6 +100,7 @@
       "title": "Odisha Weather",
       "description": "Cyclone, rainfall and IMD alerts for Odisha",
       "maxAgeDays": 7,
+      "notify": true,
       "url": "https://news.google.com/rss/search?q=%28%22Odisha%22%20OR%20%22Bhubaneswar%22%20OR%20%22Cuttack%22%29%20%28cyclone%20OR%20%22low%20pressure%22%20OR%20%22heavy%20rainfall%22%20OR%20IMD%20OR%20flood%29&hl=en-IN&gl=IN&ceid=IN:en"
     },
     {
@@ -113,6 +115,7 @@
       "title": "Odisha Government",
       "description": "Cabinet decisions, schemes and policy news from Odisha",
       "maxAgeDays": 14,
+      "notify": true,
       "url": "https://news.google.com/rss/search?q=%28%22Odisha%22%29%20%28cabinet%20OR%20scheme%20OR%20policy%20OR%20ordinance%20OR%20%22new%20rule%22%20OR%20%22government%20decision%22%29&hl=en-IN&gl=IN&ceid=IN:en"
     },
     {
@@ -141,6 +144,7 @@
       "title": "Bengaluru Power Cuts",
       "description": "Power cuts and outages in Bengaluru",
       "maxAgeDays": 30,
+      "notify": true,
       "url": "https://news.google.com/rss/search?q=%28%22Bengaluru%22%20OR%20%22Bangalore%22%29%20%28%22power%20cut%22%20OR%20%22power%20outage%22%20OR%20%22power%20shutdown%22%20OR%20%22power%20supply%20interruption%22%20OR%20%22electricity%20outage%22%29&hl=en-IN&gl=IN&ceid=IN:en"
     },
     {
@@ -241,6 +245,7 @@
       "title": "Rourkela Breaking - All Alerts",
       "description": "Every important Rourkela story, merged from the category feeds",
       "maxItems": 100,
+      "notify": true,
       "sources": ["rourkela", "rourkela-crime", "rourkela-accident", "rourkela-weather", "rourkela-exams", "rourkela-govt", "rourkela-power", "rourkela-health", "satya-alert"]
     },
     {

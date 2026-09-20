@@ -7,3 +7,6 @@ public/
 
 # Local notes and idea documents - personal, not part of the public repo
 docs/
+
+# Notification state - runtime only, restored from the Actions cache
+.notify-state.json

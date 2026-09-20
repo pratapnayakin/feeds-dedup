@@ -39,6 +39,23 @@ jobs:
       - name: Generate deduplicated feed
         run: node dedup.js
 
+      - name: Restore notify state
+        uses: actions/cache/restore@v4
+        with:
+          path: .notify-state.json
+          key: notify-state-v1
+
+      - name: Send notifications
+        run: node notify.js
+        continue-on-error: true
+
+      - name: Save notify state
+        uses: actions/cache/save@v4
+        with:
+          path: .notify-state.json
+          key: notify-state-v1
+        continue-on-error: true
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
