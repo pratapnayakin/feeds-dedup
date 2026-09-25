@@ -290,6 +290,32 @@ const { freshItems } = require('./notify.js');
   assert.strictEqual(freshItems([], seen).length, 0, 'empty items give empty fresh');
 }
 
+// --- dedupeFullText (HN-style near-identical titles) -----------------------
+// Title-only dedupe collapses them to one; full-text keeps distinct postings
+// apart while still catching true reposts.
+{
+  const mkHN = (user, body) => ({
+    title: `New comment by ${user} in "Ask HN: Who is hiring? (September 2026)"`,
+    link: `https://news.ycombinator.com/item?id=${user}`,
+    contentSnippet: body,
+  });
+  const a = mkHN('aaa', 'Acme Robotics seeks senior Rust engineer for warehouse automation in Berlin onsite');
+  const b = mkHN('bbb', 'Beta Health needs junior QA tester for mobile apps fully remote worldwide');
+  const c = mkHN('ccc', 'Acme Robotics seeks senior Rust engineer for warehouse automation in Berlin onsite');
+
+  // Title-only mode: all three collapse (the bug this flag fixes).
+  const titleOnly = { items: [a, b] };
+  const collapsed = buildBundleItems({ sources: ['t'], maxItems: 100 }, { t: titleOnly });
+  assert.strictEqual(collapsed.length, 1, 'title-only dedupe collapses HN-style items');
+
+  // Full-text mode: distinct postings survive, exact repost collapses.
+  a._dedupeFullText = true;
+  b._dedupeFullText = true;
+  c._dedupeFullText = true;
+  const kept = buildBundleItems({ sources: ['t'], maxItems: 100 }, { t: { items: [a, b, c] } });
+  assert.strictEqual(kept.length, 2, 'full-text keeps distinct postings, drops repost');
+}
+
 // --- buildHero ------------------------------------------------------------
 // Fresh items only (1-hour window), all topics covered, cap per area, no doubles.
 // Each entry names its source topic.

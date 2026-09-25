@@ -182,6 +182,9 @@ An explicit `url` always wins over `keywords`.
 - Optional: `"maxAgeDays": 30` drops items older than that many days
   (default 365; change `MAX_AGE_DAYS` in `dedup.js` for a global default).
   Items with a missing date are kept.
+- Optional: `"dedupeFullText": true` compares title plus body text instead of
+  title alone. For sources whose titles are near-identical (HN hiring
+  comments); off by default.
 
 ### Bundles - several feeds merged into one link
 

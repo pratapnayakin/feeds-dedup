@@ -218,6 +218,28 @@
       "url": "https://news.google.com/rss/search?q=%28%22visa%20sponsorship%22%20OR%20%22work%20visa%22%20OR%20%22H-1B%22%20OR%20%22remote%20job%22%20OR%20%22remote%20hiring%22%20OR%20%22work%20from%20home%22%29%20%28developer%20OR%20engineer%20OR%20%22tech%20worker%22%20OR%20IT%20OR%20Indian%29%20-movie%20-cricket&hl=en-US&gl=US&ceid=US:en"
     },
     {
+      "filename": "wwr-programming",
+      "title": "We Work Remotely - Programming",
+      "description": "Remote programming job postings from We Work Remotely",
+      "maxAgeDays": 30,
+      "url": "https://weworkremotely.com/categories/remote-programming-jobs.rss"
+    },
+    {
+      "filename": "hn-hiring",
+      "title": "HN Who Is Hiring",
+      "description": "Monthly Hacker News Who is hiring thread, via hnrss",
+      "maxAgeDays": 30,
+      "dedupeFullText": true,
+      "url": "https://hnrss.org/whoishiring/jobs"
+    },
+    {
+      "filename": "hasjob",
+      "title": "Hasjob India Tech",
+      "description": "Indian tech job postings from Hasjob by HasGeek",
+      "maxAgeDays": 30,
+      "url": "https://hasjob.co/feed"
+    },
+    {
       "filename": "india-breaking",
       "title": "India Breaking News",
       "description": "Top India stories, deduplicated",
@@ -260,7 +282,7 @@
       "title": "WebDev Breaking - All Alerts",
       "description": "Every web dev and jobs story, merged from the category feeds",
       "maxItems": 100,
-      "sources": ["webdev-frontend", "webdev-backend", "webdev-devops", "webdev-security", "india-jobs", "global-remote-jobs"]
+      "sources": ["webdev-frontend", "webdev-backend", "webdev-devops", "webdev-security", "india-jobs", "global-remote-jobs", "wwr-programming", "hn-hiring", "hasjob"]
     }
   ]
 }

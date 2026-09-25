@@ -358,7 +358,7 @@ const CATEGORIES = [
   { label: 'Breaking', slug: 'breaking', accent: '#c62828', full: true, filenames: ['rourkela-breaking', 'odisha-breaking', 'ai-breaking', 'webdev-breaking'] },
   { label: 'Rourkela', slug: 'rourkela', accent: '#e86a17', full: false, filenames: ['rourkela', 'rourkela-crime', 'rourkela-accident', 'rourkela-weather', 'rourkela-exams', 'rourkela-govt', 'rourkela-power', 'rourkela-health', 'satya-alert'] },
   { label: 'Odisha', slug: 'odisha', accent: '#2e7d32', full: false, filenames: ['odisha', 'bhubaneswar-crime', 'odisha-crime', 'odisha-accident', 'odisha-weather', 'odisha-exams', 'odisha-govt', 'odisha-power', 'odisha-health', 'oshb'] },
-  { label: 'Tech and Jobs', slug: 'tech-and-jobs', accent: '#1565c0', full: false, filenames: ['ai-models', 'ai-safety', 'ai-pricing', 'ai-industry', 'webdev-frontend', 'webdev-backend', 'webdev-devops', 'webdev-security', 'india-jobs', 'global-remote-jobs'] },
+  { label: 'Tech and Jobs', slug: 'tech-and-jobs', accent: '#1565c0', full: false, filenames: ['ai-models', 'ai-safety', 'ai-pricing', 'ai-industry', 'webdev-frontend', 'webdev-backend', 'webdev-devops', 'webdev-security', 'india-jobs', 'global-remote-jobs', 'wwr-programming', 'hn-hiring', 'hasjob'] },
   { label: 'India and World', slug: 'india-and-world', accent: '#6a1b9a', full: false, filenames: ['india-breaking', 'world-breaking', 'bengaluru-power'] },
 ];
 
@@ -471,7 +471,7 @@ function buildHero(results, byFilename) {
     if (dateValue(c.item) < cutoff) continue;
     if ((areaCount[c.area] || 0) >= HERO_AREA_CAP) continue;
     const strip = isGoogleNewsUrl(c.item.link);
-    const tokens = extractTokens(c.item.title || '', strip);
+    const tokens = itemTokens(c.item, strip);
     if (isDuplicate(tokens, seen)) continue;
     seen.push(tokens);
     areaCount[c.area] = (areaCount[c.area] || 0) + 1;
@@ -751,6 +751,18 @@ ${outlines}
  * Cross-dedupes across sources (the same story in two feeds collapses),
  * sorts newest-first, and caps the length.
  */
+/**
+ * Tokens for dedupe. Feeds with "dedupeFullText" compare title plus body
+ * text, for sources whose titles are near-identical (HN hiring comments).
+ * The marker rides on the item so bundles and the hero dedupe the same way.
+ */
+function itemTokens(item, strip) {
+  if (item._dedupeFullText) {
+    return extractTokens(`${item.title || ''} ${item.contentSnippet || item.content || ''}`, false);
+  }
+  return extractTokens(item.title || '', strip);
+}
+
 function buildBundleItems(bundle, resultsByFilename) {
   const seen = [];
   const merged = [];
@@ -761,7 +773,7 @@ function buildBundleItems(bundle, resultsByFilename) {
       // Per-item decision: only Google News links get publisher-strip.
       // Mixed bundles (Google + custom RSS) stay correct.
       const strip = isGoogleNewsUrl(item.link);
-      const tokens = extractTokens(item.title || '', strip);
+      const tokens = itemTokens(item, strip);
       if (!isDuplicate(tokens, seen)) {
         seen.push(tokens);
         merged.push(item);
@@ -811,10 +823,16 @@ async function processFeed(feed, parser) {
   // output order stays stable across runs (less re-notify churn in readers).
   recentItems.sort((a, b) => dateValue(b) - dateValue(a));
 
+  // Full-text dedupe sources tag their items so bundles and the hero
+  // compare the same way (marker is display-invisible, XML untouched).
+  if (feed.dedupeFullText) {
+    for (const item of recentItems) item._dedupeFullText = true;
+  }
+
   const acceptedSets = [];
   const uniqueItems = [];
   for (const item of recentItems) {
-    const tokens = extractTokens(item.title || '', strip);
+    const tokens = itemTokens(item, strip);
     if (!isDuplicate(tokens, acceptedSets)) {
       acceptedSets.push(tokens);
       uniqueItems.push(item);
