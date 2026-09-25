@@ -70,7 +70,7 @@ GitHub Actions (30-minute cron, or on every push, or manual)
         |-- 3. dedupes the headlines (word-overlap scoring, per feed)
         |-- 4. writes public/<filename>.xml  (clean RSS 2.0)
         |-- 5. writes public/<bundle>.xml    (merged feeds, cross-deduped)
-        |-- 6. writes public/index.html      (readable index - top 10 per feed, relative time, lead stories)
+        |-- 6. writes public/index.html      (readable index - top 10 per feed, relative time, fresh-only top stories, tab bar)
         |-- 7. writes public/feeds.opml      (one-click subscribe list)
         |
         v

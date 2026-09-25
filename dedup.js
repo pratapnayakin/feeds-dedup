@@ -355,11 +355,11 @@ function buildRssXml(feed, items) {
 // Category grouping for the index page. Order here = order on the page.
 // "full" categories span the full width (breaking bundles on top).
 const CATEGORIES = [
-  { label: 'Breaking', accent: '#c62828', full: true, filenames: ['rourkela-breaking', 'odisha-breaking', 'ai-breaking', 'webdev-breaking'] },
-  { label: 'Rourkela', accent: '#e86a17', full: false, filenames: ['rourkela', 'rourkela-crime', 'rourkela-accident', 'rourkela-weather', 'rourkela-exams', 'rourkela-govt', 'rourkela-power', 'rourkela-health', 'satya-alert'] },
-  { label: 'Odisha', accent: '#2e7d32', full: false, filenames: ['odisha', 'bhubaneswar-crime', 'odisha-crime', 'odisha-accident', 'odisha-weather', 'odisha-exams', 'odisha-govt', 'odisha-power', 'odisha-health', 'oshb'] },
-  { label: 'Tech and Jobs', accent: '#1565c0', full: false, filenames: ['ai-models', 'ai-safety', 'ai-pricing', 'ai-industry', 'webdev-frontend', 'webdev-backend', 'webdev-devops', 'webdev-security', 'india-jobs', 'global-remote-jobs'] },
-  { label: 'India and World', accent: '#6a1b9a', full: false, filenames: ['india-breaking', 'world-breaking', 'bengaluru-power'] },
+  { label: 'Breaking', slug: 'breaking', accent: '#c62828', full: true, filenames: ['rourkela-breaking', 'odisha-breaking', 'ai-breaking', 'webdev-breaking'] },
+  { label: 'Rourkela', slug: 'rourkela', accent: '#e86a17', full: false, filenames: ['rourkela', 'rourkela-crime', 'rourkela-accident', 'rourkela-weather', 'rourkela-exams', 'rourkela-govt', 'rourkela-power', 'rourkela-health', 'satya-alert'] },
+  { label: 'Odisha', slug: 'odisha', accent: '#2e7d32', full: false, filenames: ['odisha', 'bhubaneswar-crime', 'odisha-crime', 'odisha-accident', 'odisha-weather', 'odisha-exams', 'odisha-govt', 'odisha-power', 'odisha-health', 'oshb'] },
+  { label: 'Tech and Jobs', slug: 'tech-and-jobs', accent: '#1565c0', full: false, filenames: ['ai-models', 'ai-safety', 'ai-pricing', 'ai-industry', 'webdev-frontend', 'webdev-backend', 'webdev-devops', 'webdev-security', 'india-jobs', 'global-remote-jobs'] },
+  { label: 'India and World', slug: 'india-and-world', accent: '#6a1b9a', full: false, filenames: ['india-breaking', 'world-breaking', 'bengaluru-power'] },
 ];
 
 /** One feed card: title, description, top headlines. "big" enlarges headlines (breaking). */
@@ -397,23 +397,78 @@ function renderCategory(cat, results) {
   if (nonEmpty.length === 0) return '';
   const cards = nonEmpty.map((r) => renderFeedCard(r, cat.full)).join('\n');
   return `
-      <section class="category" style="--cat:${cat.accent}">
+      <section class="category" id="cat-${cat.slug}" data-cat="${cat.slug}" style="--cat:${cat.accent}">
         <h2>${escapeText(cat.label)}</h2>
         <div class="grid${cat.full ? ' full' : ''}">${cards}
         </div>
       </section>`;
 }
 
-/** Top stories for the lead strip, drawn from the breaking bundles, newest first. */
+/** Sticky tab bar. Plain anchors scroll without JS; the inline script below
+ * upgrades them to filter tabs. */
+function renderTabs(cats) {
+  const tabs = [{ slug: 'all', label: 'All' }]
+    .concat(cats.map((c) => ({ slug: c.slug, label: c.label })));
+  const links = tabs
+    .map((t) => `<a href="#${t.slug === 'all' ? 'top' : 'cat-' + t.slug}" data-tab="${t.slug}">${escapeText(t.label)}</a>`)
+    .join('\n          ');
+  return `
+      <nav class="tabs">
+          ${links}
+      </nav>`;
+}
+
+/** Top stories for the lead strip: only fresh items qualify. A topic with
+ * nothing fresh sits out instead of filling with stale items. At most
+ * HERO_AREA_CAP slots per area, so no busy topic sweeps the strip.
+ * Covers all 32 feeds: breaking bundles plus the feeds that sit in no bundle. */
+const HERO_MAX_ITEMS = 10;
+const HERO_FRESH_HOURS = 1;
+const HERO_AREA_CAP = 2;
+const HERO_AREA_OF = {
+  'rourkela-breaking': 'rourkela',
+  'odisha-breaking': 'odisha',
+  'ai-breaking': 'ai',
+  'webdev-breaking': 'webdev',
+  'oshb': 'odisha',
+  'bhubaneswar-crime': 'odisha',
+  'bengaluru-power': 'india-world',
+  'india-breaking': 'india-world',
+  'world-breaking': 'india-world',
+};
 function buildHero(results, byFilename) {
-  const names = ['rourkela-breaking', 'odisha-breaking', 'ai-breaking', 'webdev-breaking'];
-  const items = [];
-  for (const name of names) {
+  const bundleNames = ['rourkela-breaking', 'odisha-breaking', 'ai-breaking', 'webdev-breaking'];
+  const orphanNames = ['oshb', 'bengaluru-power', 'bhubaneswar-crime', 'india-breaking', 'world-breaking'];
+  const perSource = [];
+  for (const name of bundleNames) {
     const r = byFilename[name];
-    if (r) items.push(...r.items.slice(0, 3));
+    if (r) perSource.push({ area: HERO_AREA_OF[name], items: r.items.slice(0, 3) });
   }
-  items.sort((a, b) => dateValue(b) - dateValue(a));
-  return items.slice(0, 5);
+  for (const name of orphanNames) {
+    const r = byFilename[name];
+    if (r) perSource.push({ area: HERO_AREA_OF[name], items: r.items.slice(0, 3) });
+  }
+  const cutoff = Date.now() - HERO_FRESH_HOURS * 60 * 60 * 1000;
+  const candidates = [];
+  for (const s of perSource) {
+    for (const item of s.items) candidates.push({ area: s.area, item });
+  }
+  candidates.sort((a, b) => dateValue(b.item) - dateValue(a.item));
+  const seen = [];
+  const areaCount = {};
+  const hero = [];
+  for (const c of candidates) {
+    if (hero.length >= HERO_MAX_ITEMS) break;
+    if (dateValue(c.item) < cutoff) continue;
+    if ((areaCount[c.area] || 0) >= HERO_AREA_CAP) continue;
+    const strip = isGoogleNewsUrl(c.item.link);
+    const tokens = extractTokens(c.item.title || '', strip);
+    if (isDuplicate(tokens, seen)) continue;
+    seen.push(tokens);
+    areaCount[c.area] = (areaCount[c.area] || 0) + 1;
+    hero.push(c.item);
+  }
+  return hero;
 }
 
 /** Lead story strip under the masthead. */
@@ -445,23 +500,32 @@ function buildIndexHtml(results) {
   for (const result of results) byFilename[result.feed.filename] = result;
 
   const sections = [];
+  const shownCats = [];
   for (const cat of CATEGORIES) {
     const catResults = cat.filenames.map((f) => byFilename[f]).filter(Boolean);
     if (catResults.length > 0) {
       const html = renderCategory(cat, catResults);
-      if (html) sections.push(html);
+      if (html) {
+        sections.push(html);
+        shownCats.push(cat);
+      }
     }
   }
   // Safety net: any feed not listed above still appears.
   const known = new Set(CATEGORIES.flatMap((c) => c.filenames));
   const leftovers = results.filter((r) => !known.has(r.feed.filename));
   if (leftovers.length > 0) {
-    const html = renderCategory({ label: 'More', accent: '#607d8b', full: false }, leftovers);
-    if (html) sections.push(html);
+    const more = { label: 'More', slug: 'more', accent: '#607d8b', full: false };
+    const html = renderCategory(more, leftovers);
+    if (html) {
+      sections.push(html);
+      shownCats.push(more);
+    }
   }
 
   const updated = new Date().toUTCString();
   const hero = renderHero(buildHero(results, byFilename));
+  const tabs = renderTabs(shownCats);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -514,6 +578,28 @@ function buildIndexHtml(results) {
       font-size: 0.9rem;
       font-weight: 600;
     }
+    .tabs {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--bg);
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .tabs a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.35rem 0.7rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--card);
+    }
+    .tabs a.active { color: #fff; background: var(--accent); border-color: var(--accent); }
     .hero { margin-top: 1.5rem; }
     .hero-label {
       display: flex;
@@ -572,7 +658,7 @@ function buildIndexHtml(results) {
   </style>
 </head>
 <body>
-  <div class="wrap">
+  <div class="wrap" id="top">
     <header class="masthead">
       <h1 class="brand">PN Broadcast</h1>
       <p class="tagline">Same story, many publishers - one headline.</p>
@@ -581,10 +667,42 @@ function buildIndexHtml(results) {
         <a class="subscribe" href="feeds.opml">Subscribe to all feeds</a>
       </div>
     </header>
+    ${tabs}
     ${hero}
     ${sections.join('\n')}
     <footer>Generated by PN Broadcast. Personal project, view-only.</footer>
   </div>
+<script>
+(function () {
+  var tabs = document.querySelectorAll('.tabs a');
+  var sections = document.querySelectorAll('.category');
+  function show(name) {
+    for (var i = 0; i < tabs.length; i++) {
+      if (tabs[i].getAttribute('data-tab') === name) tabs[i].classList.add('active');
+      else tabs[i].classList.remove('active');
+    }
+    for (var j = 0; j < sections.length; j++) {
+      var s = sections[j];
+      s.style.display = (name === 'all' || s.getAttribute('data-cat') === name) ? '' : 'none';
+    }
+  }
+  for (var k = 0; k < tabs.length; k++) {
+    tabs[k].addEventListener('click', function (e) {
+      e.preventDefault();
+      var name = this.getAttribute('data-tab');
+      show(name);
+      try { history.replaceState(null, '', '#' + name); } catch (err) {}
+    });
+  }
+  var raw = (location.hash || '#all').slice(1);
+  var initial = raw.indexOf('cat-') === 0 ? raw.slice(4) : raw;
+  var known = false;
+  for (var m = 0; m < tabs.length; m++) {
+    if (tabs[m].getAttribute('data-tab') === initial) known = true;
+  }
+  show(known ? initial : 'all');
+})();
+</script>
 </body>
 </html>`;
 }
@@ -808,6 +926,7 @@ module.exports = {
   buildRssXml,
   buildFeedUrl,
   buildBundleItems,
+  buildHero,
   isGoogleNewsUrl,
   validateConfig,
 };

@@ -20,6 +20,7 @@ const {
   buildRssXml,
   buildFeedUrl,
   buildBundleItems,
+  buildHero,
   isGoogleNewsUrl,
   validateConfig,
 } = require('./dedup.js');
@@ -287,6 +288,43 @@ const { freshItems } = require('./notify.js');
   assert.strictEqual(fresh.length, 2, 'returns only unseen guids');
   assert.strictEqual(fresh[0].guid, 'c', 'keeps original order');
   assert.strictEqual(freshItems([], seen).length, 0, 'empty items give empty fresh');
+}
+
+// --- buildHero ------------------------------------------------------------
+// Fresh items only (1-hour window), all topics covered, cap per area, no doubles.
+{
+  const H = 60 * 60 * 1000;
+  const now = Date.now();
+  const mk = (title, ageMs, link) => ({
+    title,
+    link: link || 'https://example.com/' + title,
+    pubDate: new Date(now - ageMs).toUTCString(),
+  });
+  const byFilename = {
+    'rourkela-breaking': { items: [mk('r1', 10 * 60 * 1000), mk('r2', 20 * 60 * 1000), mk('r3', 30 * 60 * 1000)] },
+    'odisha-breaking': { items: [mk('o1', 15 * 60 * 1000)] },
+    'oshb': { items: [mk('s1', 5 * 60 * 1000)] },
+    'india-breaking': { items: [mk('i1', 50 * 60 * 1000)] },
+    'bengaluru-power': { items: [mk('old1', 5 * H), mk('old2', 9 * H)] },
+  };
+  const hero = buildHero([], byFilename);
+  const titles = hero.map((i) => i.title);
+  assert(titles.includes('s1'), 'orphan feeds appear in hero');
+  assert(titles.includes('r1'), 'bundle feeds appear in hero');
+  assert(!titles.includes('old1') && !titles.includes('old2'), 'stale items never fill the strip');
+  assert(hero.length <= 10, 'hero caps at 10');
+
+  // Area cap: rourkela has 3 fresh candidates but takes at most 2 slots.
+  const rourkelaCount = titles.filter((t) => t === 'r1' || t === 'r2' || t === 'r3').length;
+  assert(rourkelaCount <= 2, 'busy area cannot sweep the strip');
+
+  // Cross-dedupe: same story via two bundles appears once.
+  const dupBy = {
+    'rourkela-breaking': { items: [mk('Same big fire in market', 10 * 60 * 1000)] },
+    'odisha-breaking': { items: [mk('Same big fire in market reported', 12 * 60 * 1000)] },
+  };
+  const hero2 = buildHero([], dupBy);
+  assert.strictEqual(hero2.length, 1, 'same story across bundles appears once');
 }
 
 console.log('All tests passed.');
