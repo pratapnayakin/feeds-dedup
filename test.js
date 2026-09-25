@@ -292,6 +292,7 @@ const { freshItems } = require('./notify.js');
 
 // --- buildHero ------------------------------------------------------------
 // Fresh items only (1-hour window), all topics covered, cap per area, no doubles.
+// Each entry names its source topic.
 {
   const H = 60 * 60 * 1000;
   const now = Date.now();
@@ -300,15 +301,27 @@ const { freshItems } = require('./notify.js');
     link: link || 'https://example.com/' + title,
     pubDate: new Date(now - ageMs).toUTCString(),
   });
+  const r1 = [mk('r1', 10 * 60 * 1000), mk('r2', 20 * 60 * 1000), mk('r3', 30 * 60 * 1000)];
+  const o1 = [mk('o1', 15 * 60 * 1000)];
+  const s1 = [mk('s1', 5 * 60 * 1000)];
+  const i1 = [mk('i1', 50 * 60 * 1000)];
+  const old = [mk('old1', 5 * H), mk('old2', 9 * H)];
   const byFilename = {
-    'rourkela-breaking': { items: [mk('r1', 10 * 60 * 1000), mk('r2', 20 * 60 * 1000), mk('r3', 30 * 60 * 1000)] },
-    'odisha-breaking': { items: [mk('o1', 15 * 60 * 1000)] },
-    'oshb': { items: [mk('s1', 5 * 60 * 1000)] },
-    'india-breaking': { items: [mk('i1', 50 * 60 * 1000)] },
-    'bengaluru-power': { items: [mk('old1', 5 * H), mk('old2', 9 * H)] },
+    'rourkela-breaking': { items: r1 },
+    'odisha-breaking': { items: o1 },
+    'oshb': { items: s1 },
+    'india-breaking': { items: i1 },
+    'bengaluru-power': { items: old },
   };
-  const hero = buildHero([], byFilename);
-  const titles = hero.map((i) => i.title);
+  const results = [
+    { feed: { filename: 'rourkela-crime', title: 'Rourkela Crime' }, items: r1 },
+    { feed: { filename: 'odisha-crime', title: 'Odisha Crime' }, items: o1 },
+    { feed: { filename: 'oshb', title: 'OSHB News' }, items: s1 },
+    { feed: { filename: 'india-breaking', title: 'India Breaking News' }, items: i1 },
+    { feed: { filename: 'bengaluru-power', title: 'Bengaluru Power Cuts' }, items: old },
+  ];
+  const hero = buildHero(results, byFilename);
+  const titles = hero.map((w) => w.item.title);
   assert(titles.includes('s1'), 'orphan feeds appear in hero');
   assert(titles.includes('r1'), 'bundle feeds appear in hero');
   assert(!titles.includes('old1') && !titles.includes('old2'), 'stale items never fill the strip');
@@ -318,12 +331,22 @@ const { freshItems } = require('./notify.js');
   const rourkelaCount = titles.filter((t) => t === 'r1' || t === 'r2' || t === 'r3').length;
   assert(rourkelaCount <= 2, 'busy area cannot sweep the strip');
 
+  // Source topic rides along for the meta line.
+  const s1entry = hero.find((w) => w.item.title === 's1');
+  assert.strictEqual(s1entry.source, 'OSHB News', 'hero entry names its topic');
+
   // Cross-dedupe: same story via two bundles appears once.
+  const d1 = [mk('Same big fire in market', 10 * 60 * 1000)];
+  const d2 = [mk('Same big fire in market reported', 12 * 60 * 1000)];
   const dupBy = {
-    'rourkela-breaking': { items: [mk('Same big fire in market', 10 * 60 * 1000)] },
-    'odisha-breaking': { items: [mk('Same big fire in market reported', 12 * 60 * 1000)] },
+    'rourkela-breaking': { items: d1 },
+    'odisha-breaking': { items: d2 },
   };
-  const hero2 = buildHero([], dupBy);
+  const dupResults = [
+    { feed: { filename: 'rourkela-crime', title: 'Rourkela Crime' }, items: d1 },
+    { feed: { filename: 'odisha-crime', title: 'Odisha Crime' }, items: d2 },
+  ];
+  const hero2 = buildHero(dupResults, dupBy);
   assert.strictEqual(hero2.length, 1, 'same story across bundles appears once');
 }
 

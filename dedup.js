@@ -437,6 +437,15 @@ const HERO_AREA_OF = {
   'world-breaking': 'india-world',
 };
 function buildHero(results, byFilename) {
+  // Source topic per item: bundle items are the same objects as their base
+  // feed items, so the first feed holding an item names its topic.
+  const sourceOf = new Map();
+  for (const r of results || []) {
+    const title = r.feed && r.feed.title;
+    for (const it of r.items || []) {
+      if (!sourceOf.has(it)) sourceOf.set(it, title || '');
+    }
+  }
   const bundleNames = ['rourkela-breaking', 'odisha-breaking', 'ai-breaking', 'webdev-breaking'];
   const orphanNames = ['oshb', 'bengaluru-power', 'bhubaneswar-crime', 'india-breaking', 'world-breaking'];
   const perSource = [];
@@ -466,19 +475,20 @@ function buildHero(results, byFilename) {
     if (isDuplicate(tokens, seen)) continue;
     seen.push(tokens);
     areaCount[c.area] = (areaCount[c.area] || 0) + 1;
-    hero.push(c.item);
+    hero.push({ item: c.item, source: sourceOf.get(c.item) || '' });
   }
   return hero;
 }
 
-/** Lead story strip under the masthead. */
-function renderHero(items) {
-  if (items.length === 0) return '';
-  const rows = items
-    .map((item) => {
+/** Lead story strip under the masthead. Each row names its topic. */
+function renderHero(entries) {
+  if (entries.length === 0) return '';
+  const rows = entries
+    .map((w) => {
+      const item = w.item;
       const pub = item.pubDate || item.isoDate || '';
       const publisher = publisherOf(item);
-      const meta = [publisher, relativeTime(pub)].filter(Boolean).join(' | ');
+      const meta = [publisher, w.source, relativeTime(pub)].filter(Boolean).join(' | ');
       return `
           <li>
             <a class="hero-headline" href="${escapeText(item.link)}">${escapeText(displayTitle(item))}</a>
